@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<!-- VER:FINAL-ES5 -->
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>慾望快車 — 投資人生遊戲</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#C8A84B;--gold-light:#E8C96B;--gold-dark:#8B6914;--black:#0A0A0A;--dark:#111118;--panel:#161622;--panel2:#1E1E2E;--border:#2A2A3E;--text:#E8E8F0;--text-dim:#8888AA;--red:#E84040;--green:#40C87A;--blue:#4080E8;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--black);color:var(--text);font-family:'Noto Serif TC',serif;min-height:100vh;overflow-x:hidden;}
+  .header{background:linear-gradient(135deg,#0A0A10,#141420,#0A0A10);border-bottom:2px solid var(--gold);position:relative;overflow:hidden;}
+  .header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(200,168,75,.03) 40px,rgba(200,168,75,.03) 41px);}
+  .header-inner{position:relative;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;flex-wrap:wrap;gap:12px;}
+  .logo-title{display:flex;align-items:center;gap:18px;}
+  .title-block h1{font-family:'Bebas Neue';font-size:40px;letter-spacing:4px;background:linear-gradient(90deg,var(--gold-light),var(--gold),var(--gold-dark));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+  .title-block p{color:var(--text-dim);font-size:12px;letter-spacing:3px;font-family:'DM Mono';margin-top:3px;}
+  .phase-btn{padding:9px 20px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;font-family:'Noto Serif TC';font-size:13px;letter-spacing:1px;transition:all .2s;}
+  .phase-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+  .phase-btn:hover:not(.active){border-color:var(--gold);color:var(--gold);}
+  .phase-indicator{display:flex;gap:6px;}
+  .phase{display:none;}
+  .phase.active{display:block;}
+  .market-ticker{background:var(--panel2);border-top:1px solid var(--border);padding:7px 40px;display:flex;gap:28px;overflow:hidden;white-space:nowrap;}
+  .ticker-item{display:flex;align-items:center;gap:7px;font-family:'DM Mono';font-size:11px;color:var(--text-dim);flex-shrink:0;}
+  .ticker-up{color:var(--green);}
+  .ticker-down{color:var(--red);}
+  .main{padding:28px 40px;max-width:1600px;margin:0 auto;}  .card{background:var(--panel);border:1px solid var(--border);border-radius:2px;padding:22px;}
+  .card-title{font-family:'Bebas Neue';font-size:17px;letter-spacing:3px;color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+  .card-title::before{content:'';width:4px;height:17px;background:var(--gold);display:block;}
+  .btn{padding:10px 22px;border:none;cursor:pointer;font-family:'Noto Serif TC';font-size:14px;font-weight:700;letter-spacing:1px;transition:all .2s;border-radius:1px;}
+  .btn-gold{background:linear-gradient(135deg,var(--gold-light),var(--gold));color:#000;}
+  .btn-gold:hover{filter:brightness(1.15);}
+  .btn-danger{background:transparent;border:1px solid var(--red);color:var(--red);padding:5px 11px;font-size:12px;}
+  .btn-danger:hover{background:var(--red);color:#fff;}
+  .btn-sm{padding:7px 14px;font-size:13px;}
+  .btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);}
+  .btn-outline:hover{background:var(--gold);color:#000;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-group label{font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono';}
+  .form-group input,.form-group select{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:9px 12px;font-family:'Noto Serif TC';font-size:14px;outline:none;transition:border-color .2s;width:100%;}
+  .form-group input:focus,.form-group select:focus{border-color:var(--gold);}
+  .form-group select option{background:var(--panel2);}
+  .auto-field{background:rgba(200,168,75,.05)!important;color:var(--gold)!important;border-color:rgba(200,168,75,.2)!important;font-family:'DM Mono'!important;}
+  input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+  input[type=number]{-moz-appearance:textfield;}
+  .setup-grid{display:grid;grid-template-columns:370px 1fr;gap:22px;align-items:start;}
+  .player-table{width:100%;border-collapse:collapse;}
+  .player-table th{background:var(--panel2);padding:9px 13px;text-align:left;font-size:11px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono';font-weight:500;border-bottom:1px solid var(--border);}
+  .player-table td{padding:10px 13px;border-bottom:1px solid rgba(42,42,62,.5);font-size:14px;vertical-align:middle;}
+  .player-table tr:hover td{background:rgba(200,168,75,.03);}
+  .player-badge{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#000;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono';}
+  .tag{display:inline-block;padding:3px 8px;background:rgba(64,128,232,.15);border:1px solid rgba(64,128,232,.3);color:var(--blue);font-size:11px;font-family:'DM Mono';}
+  .gameplay-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+  .round-display{display:flex;align-items:center;gap:14px;}
+  .round-ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0;}
+  .round-ring-wrap .rr-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+  .rr-num{font-family:'Bebas Neue';font-size:28px;color:var(--gold);line-height:1;}
+  .rr-sub{font-family:'DM Mono';font-size:8px;color:var(--text-dim);letter-spacing:1px;}
+  .war-badge{background:rgba(232,64,64,.15);border:1px solid var(--red);color:var(--red);padding:8px 14px;font-family:'Bebas Neue';font-size:15px;letter-spacing:2px;animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+  .round-steps{display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap;}
+  .step-dot{width:30px;height:30px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-family:'DM Mono';color:var(--text-dim);}
+  .step-dot.done{background:rgba(64,200,122,.12);border-color:var(--green);color:var(--green);}
+  .step-dot.active{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700;}
+  .player-turn-grid{display:grid;grid-template-columns:250px 1fr;gap:18px;margin-bottom:22px;}
+  .player-select-list{display:flex;flex-direction:column;gap:7px;}
+  .player-select-item{padding:11px 14px;border:1px solid var(--border);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:11px;}
+  .player-select-item:hover{border-color:var(--gold-dark);}
+  .player-select-item.active{border-color:var(--gold);background:rgba(200,168,75,.07);}
+  .player-done-tick{margin-left:auto;color:var(--green);font-size:15px;}
+  .invest-panel{display:flex;flex-direction:column;gap:14px;}
+  .player-summary-bar{background:var(--panel);border:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
+  .summary-item{display:flex;flex-direction:column;gap:3px;}
+  .summary-label{font-family:'DM Mono';font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;}
+  .summary-value{font-family:'DM Mono';font-size:17px;color:var(--text);font-weight:500;}
+  .summary-value.gold{color:var(--gold);}
+  .summary-value.green{color:var(--green);}
+  .product-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:6px;}
+  .product-card{background:var(--panel2);border:2px solid var(--border);padding:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+  .product-card:hover{border-color:var(--gold-dark);transform:translateY(-1px);}
+  .product-card.selected{border-color:var(--gold);background:rgba(200,168,75,.08);}
+  .product-card.selected::after{content:'✓';position:absolute;top:6px;right:9px;font-family:'DM Mono';font-size:12px;color:var(--gold);}
+  .pc-name{font-family:'Bebas Neue';font-size:16px;letter-spacing:2px;margin-bottom:2px;}
+  .pc-price{font-family:'DM Mono';font-size:20px;font-weight:500;}
+  .pc-change{font-family:'DM Mono';font-size:11px;margin-top:2px;}
+  .pc-change.up{color:var(--green);}
+  .pc-change.down{color:var(--red);}
+  .pc-held{display:inline-block;margin-top:5px;background:rgba(200,168,75,.2);color:var(--gold);font-size:10px;padding:2px 6px;font-family:'DM Mono';}
+  .trade-form{background:var(--panel2);border:1px solid var(--border);padding:18px;}
+  .trade-form-title{font-family:'Bebas Neue';font-size:15px;letter-spacing:2px;margin-bottom:12px;}
+  .trade-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;align-items:end;}
+  .dice-section{background:var(--panel2);border:1px solid var(--border);padding:18px;display:flex;align-items:center;gap:22px;}
+  .dice-input-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;}
+  .dice-result-info{flex:1;}
+  .dice-result-label{font-family:'DM Mono';font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:5px;}
+  .dice-result-text{font-size:14px;color:var(--text);}
+  .dice-result-text strong{color:var(--gold);}
+  .holdings-mini{background:var(--panel);border:1px solid var(--border);padding:13px;}
+  .holdings-mini-title{font-family:'DM Mono';font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:9px;}
+  .holdings-row{display:flex;justify-content:space-between;font-family:'DM Mono';font-size:12px;padding:5px 0;border-bottom:1px solid rgba(42,42,62,.4);}
+  .holdings-row:last-child{border-bottom:none;}
+  .h-name{color:var(--text-dim);}
+  .h-val{color:var(--text);}
+  .h-val.pos{color:var(--green);}
+  .h-val.neg{color:var(--red);}
+  .extra-expense-row{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--border);padding:14px 18px;}
+  .extra-expense-row label{color:var(--text-dim);font-size:14px;white-space:nowrap;}
+  .extra-expense-row input{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;font-family:'DM Mono';font-size:16px;outline:none;width:160px;}
+  .extra-expense-row input:focus{border-color:var(--gold);}
+  .confirm-row{display:flex;justify-content:flex-end;gap:10px;margin-top:6px;}
+  .next-round-bar{background:var(--panel);border:1px solid var(--border);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;margin-top:18px;}
+  .lb-container{max-width:960px;margin:0 auto;}
+  .lb-header{text-align:center;margin-bottom:36px;padding:36px;background:linear-gradient(135deg,var(--panel),rgba(200,168,75,.05));border:1px solid var(--gold);position:relative;}
+  .lb-header::before,.lb-header::after{content:'◆';position:absolute;top:50%;transform:translateY(-50%);color:var(--gold);font-size:18px;}
+  .lb-header::before{left:22px;}
+  .lb-header::after{right:22px;}
+  .lb-title{font-family:'Bebas Neue';font-size:44px;letter-spacing:8px;background:linear-gradient(90deg,var(--gold-light),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .lb-subtitle{color:var(--text-dim);font-size:12px;letter-spacing:3px;font-family:'DM Mono';margin-top:5px;}
+  .lb-table{width:100%;border-collapse:collapse;}
+  .lb-table th{background:var(--panel2);padding:11px 18px;text-align:left;font-size:11px;color:var(--gold);letter-spacing:2px;font-family:'DM Mono';font-weight:500;border-bottom:2px solid var(--gold);}
+  .lb-table td{padding:14px 18px;border-bottom:1px solid var(--border);font-family:'DM Mono';font-size:14px;vertical-align:middle;}
+  .lb-table tr:hover td{background:rgba(200,168,75,.04);}
+  .lb-rank{font-family:'Bebas Neue';font-size:26px;color:var(--text-dim);text-align:center;}
+  .lb-rank.gold{color:#FFD700;}
+  .lb-rank.silver{color:#C0C0C0;}
+  .lb-rank.bronze{color:#CD7F32;}
+  .lb-name{font-size:15px;font-family:'Noto Serif TC';}
+  .lb-asset{font-size:17px;color:var(--gold);font-weight:500;}
+  .lb-gain.pos{color:var(--green);}
+  .lb-gain.neg{color:var(--red);}
+  .lb-result{padding:3px 9px;font-size:11px;}
+  .lb-result.profit{background:rgba(64,200,122,.1);border:1px solid var(--green);color:var(--green);}
+  .lb-result.loss{background:rgba(232,64,64,.1);border:1px solid var(--red);color:var(--red);}
+  /* Modals */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal-box{background:var(--panel);border:1px solid var(--gold);padding:28px;min-width:420px;max-width:640px;width:90%;position:relative;transform:translateY(16px);transition:transform .25s;max-height:80vh;overflow-y:auto;}
+  .modal-overlay.open .modal-box{transform:translateY(0);}
+  .modal-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:3px;color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+  .modal-close{position:absolute;top:14px;right:16px;background:transparent;border:none;color:var(--text-dim);font-size:20px;cursor:pointer;line-height:1;}
+  .modal-close:hover{color:var(--text);}
+  .modal-section{margin-bottom:16px;}
+  .modal-section-title{font-family:'DM Mono';font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .player-option{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .2s;}
+  .player-option:hover{border-color:var(--gold-dark);}
+  .player-option.selected-opt{border-color:var(--gold);background:rgba(200,168,75,.07);}
+  .steal-product-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--panel2);border:1px solid var(--border);margin-bottom:5px;font-family:'DM Mono';font-size:12px;}
+  .steal-product-row.has-match{border-color:rgba(232,64,64,.4);}
+
+  #toast{position:fixed;bottom:28px;right:28px;background:var(--panel2);border-left:3px solid var(--gold);padding:13px 18px;font-size:13px;min-width:220px;opacity:0;transform:translateX(18px);transition:all .3s;z-index:9999;pointer-events:none;}
+  #toast.show{opacity:1;transform:translateX(0);}
+  #toast.error{border-color:var(--red);}
+  #toast.success{border-color:var(--green);}
+  .empty-state{text-align:center;padding:50px 20px;color:var(--text-dim);font-family:'DM Mono';font-size:13px;letter-spacing:2px;}
+  .empty-state .es-icon{font-size:38px;margin-bottom:10px;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:var(--dark);}
+  ::-webkit-scrollbar-thumb{background:var(--border);}
+  ::-webkit-scrollbar-thumb:hover{background:var(--gold-dark);}
+  /* Mobile blink fix: avoid GPU-compositing issues */
+  *{-webkit-tap-highlight-color:transparent;}/* all phases hidden until JS shows them */  body{-webkit-font-smoothing:antialiased;}
+  /* Disable heavy animations on mobile */
+  @media(max-width:768px){
+    *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.1ms!important;}
+    .market-ticker{display:none;}
+    .main{padding:14px!important;}
+    .product-cards{grid-template-columns:repeat(2,1fr)!important;}
+    .trade-inputs{grid-template-columns:1fr 1fr!important;}
+  }
+  @media(max-width:1100px){.setup-grid{grid-template-columns:1fr;}.player-turn-grid{grid-template-columns:1fr;}.product-cards{grid-template-columns:repeat(2,1fr);}.trade-inputs{grid-template-columns:1fr 1fr;}.main{padding:18px;}.header-inner{padding:14px 18px;}}
+</style>
+<!-- QR code library -->
+</head>
+<body style="background:#0A0A0A">
+
+<!-- Spinner rendered immediately — no JS needed, no black flash -->
+</div>
+
+<!-- Role detection runs SYNCHRONOUSLY before any content is painted -->
+<script>
+(function(){
+  var p=new URLSearchParams(location.search);
+  // Also support hash-based routing (#admin, #join, #player=N) for file:// compatibility
+  var h=location.hash.replace('#','');
+  var hp=new URLSearchParams(h.includes('=')?h:'x='+h);
+  var isAdmin=p.has('admin')||h==='admin';
+  var isJoin=p.has('join')||h==='join';
+  var isPlayer=p.has('player')||h.startsWith('player');
+  var role=isAdmin?'admin':isPlayer?'player':isJoin?'join':'lobby';
+  window.__ROLE=role;
+  // Player index from ?player=N or #player=N
+  var pIdx=isPlayer?parseInt(p.get('player')||hp.get('player')||h.replace('player=','')||'0'):null;
+  window.__PLAYER_IDX=isNaN(pIdx)?null:pIdx;
+})();
+</script>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo-title">
+      <!-- Animated SVG logo diamond -->
+      <svg width="56" height="56" viewBox="0 0 56 56" style="flex-shrink:0">
+        <defs>
+          <linearGradient id="lgLogo" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#E8C96B"/>
+            <stop offset="100%" stop-color="#8B6914"/>
+          </linearGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <rect x="7" y="7" width="42" height="42" rx="4" fill="url(#lgLogo)" transform="rotate(45 28 28)" filter="url(#glow)">
+          <animate attributeName="opacity" values="0.85;1;0.85" dur="3s" repeatCount="indefinite"/>
+        </rect>
+        <text x="28" y="35" text-anchor="middle" font-family="'Noto Serif TC',serif" font-size="19" font-weight="900" fill="#000" transform="rotate(0 28 28)">慾</text>
+      </svg>
+      <div class="title-block">
+        <h1>慾望快車</h1>
+        <p>Investment Life Board Game · 投資人生</p>
+      </div>
+    </div>
+    <div class="phase-indicator">
+      <button class="phase-btn active" onclick="switchPhase('setup')">① 玩家設定</button>
+      <button class="phase-btn" onclick="switchPhase('gameplay')">② 遊戲進行</button>
+      <button class="phase-btn" onclick="switchPhase('leaderboard')">③ 排行榜</button>
+    </div>
+  </div>
+  <div class="market-ticker" id="marketTicker"></div>
+</div>
+
+<div class="main">
+
+<!-- LOBBY (QR Code page) -->
+<div id="phase-lobby">
+  <div style="max-width:560px;margin:0 auto;padding:30px 18px">
+
+    <!-- Single QR code card -->
+    <div class="card" style="text-align:center;padding:40px 32px">
+      <div class="card-title" style="justify-content:center;margin-bottom:6px">慾望快車</div>
+      <div id="ver-display" style="font-family:DM Mono,monospace;font-size:10px;color:#444;margin-bottom:4px">v8.0</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:28px;font-family:DM Mono,monospace;letter-spacing:1px">
+        掃描以下 QR Code 加入遊戲
+      </div>
+      <!-- QR Code -->
+      <div style="margin-bottom:20px">
+        <div id="qr-canvas" style="display:flex;justify-content:center;margin-bottom:10px"></div>
+        <div id="qr-url-label" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text-dim);word-break:break-all;cursor:pointer" onclick="copyRegLink()" title="點擊複製連結"></div>
+        <div id="reg-copy-badge" style="font-family:DM Mono,monospace;font-size:11px;color:var(--text-dim);margin-top:4px;min-height:16px"></div>
+      </div>
+
+      <!-- Registered players count -->
+      <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:24px">
+        <div id="lobby-player-count" style="font-family:DM Mono,monospace;font-size:13px;color:var(--text-dim)"></div>
+        <button onclick="manualRefresh()" style="font-family:DM Mono,monospace;font-size:11px;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;cursor:pointer" title="手動刷新">↻ 刷新</button>
+      </div>
+
+      <!-- Admin login — password protected -->
+      <div style="border-top:1px solid var(--border);padding-top:20px;margin-top:4px">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;font-family:DM Mono,monospace">Admin 登入</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <input type="password" id="admin-pw-input" placeholder="輸入密碼" maxlength="30"
+            style="background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:8px 14px;font-family:DM Mono,monospace;font-size:14px;outline:none;width:180px"
+            onkeydown="if(event.key==='Enter')adminLogin()"
+            onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+          <button class="btn btn-gold btn-sm" onclick="adminLogin()">進入 →</button>
+        </div>
+        <div id="admin-pw-error" style="color:var(--red);font-size:12px;font-family:DM Mono,monospace;margin-top:8px;display:none">密碼錯誤</div>
+      </div>
+    </div>
+
+    <!-- Registered players list (live) -->
+    <div class="card" style="margin-top:16px" id="lobby-players-card">
+      <div class="card-title">已登記玩家</div>
+      <div id="lobby-player-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER SELF-REGISTRATION -->
+<div id="phase-player-register">
+  <div style="max-width:480px;margin:40px auto;padding:0 18px">
+    <div class="card">
+      <div class="card-title">玩家登記</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;font-family:DM Mono,monospace">
+        填寫資料後點擊確認，等待 Admin 開始遊戲
+      </div>
+      <div id="player-reg-content">
+        <div class="form-row"><div class="form-group" style="grid-column:1/-1">
+          <label>姓名</label><input type="text" id="reg-name" placeholder="輸入你的名字…" maxlength="20">
+        </div></div>
+        <div class="form-row"><div class="form-group" style="grid-column:1/-1">
+          <label>職業</label>
+          <select id="reg-occ" onchange="regAutoFill()">
+            <option value="">— 選擇職業 —</option>
+            <option value="註冊護士|28000|180000">註冊護士</option>
+            <option value="金融分析師|35000|230000">金融分析師</option>
+            <option value="醫生|42000|300000">醫生</option>
+            <option value="企業高管|50000|400000">企業高管</option>
+            <option value="創意總監|35000|250000">創意總監</option>
+            <option value="中學教師|26000|170000">中學教師</option>
+            <option value="項目經理|34000|220000">項目經理</option>
+            <option value="自媒體博主|30000|190000">自媒體博主</option>
+            <option value="商業攝影師|25000|200000">商業攝影師</option>
+            <option value="法務顧問|37000|245000">法務顧問</option>
+            <option value="電商營運總監|28000|180000">電商營運總監</option>
+            <option value="詐騙者|35000|350000">詐騙者</option>
+            <option value="心理輔導師|32000|200000">心理輔導師</option>
+            <option value="律師|40000|250000">律師</option>
+            <option value="工程師|33000|210000">工程師</option>
+            <option value="人力資源主管|29000|185000">人力資源主管</option>
+            <option value="活動策劃師|29000|185000">活動策劃師</option>
+            <option value="營養師|25000|160000">營養師</option>
+            <option value="市場營運經理|27000|175000">市場營運經理</option>
+            <option value="會計師|36000|240000">會計師</option>
+          </select>
+        </div></div>
+        <div class="form-row">
+          <div class="form-group"><label>月薪 ($)</label><input type="number" id="reg-salary" class="auto-field" readonly placeholder="自動填入"></div>
+          <div class="form-group"><label>年收入 ($)</label><input type="number" id="reg-annual" class="auto-field" readonly placeholder="自動填入"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>初始資產 ($)</label><input type="number" id="reg-initial" class="auto-field" readonly placeholder="自動填入"></div>
+          <div class="form-group">
+            <label>保險開支 ($30,000)</label>
+            <div style="display:flex;gap:0;height:38px">
+              <button type="button" id="reg-ins-y" onclick="setRegInsurance(true)"
+                style="flex:1;border:1px solid var(--gold);background:var(--gold);color:#000;font-family:'Noto Serif TC';font-size:14px;font-weight:700;cursor:pointer">Y</button>
+              <button type="button" id="reg-ins-n" onclick="setRegInsurance(false)"
+                style="flex:1;border:1px solid var(--border);background:var(--panel2);color:var(--text-dim);font-family:'Noto Serif TC';font-size:14px;font-weight:700;cursor:pointer">N</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="submitPlayerRegistration()">確認登記 →</button>
+      </div>
+      <div id="player-reg-done" style="display:none;text-align:center;padding:20px">
+        <div style="font-size:40px;margin-bottom:12px">✅</div>
+        <div style="font-family:'Bebas Neue';font-size:24px;color:var(--gold);letter-spacing:2px" id="reg-done-name"></div>
+        <div style="color:var(--text-dim);font-size:13px;margin-top:8px">登記完成！等待 Admin 開始遊戲</div>
+        <div style="color:var(--text-dim);font-size:12px;margin-top:14px;font-family:'DM Mono'" id="reg-waiting-status"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP (Admin only) -->
+<div class="phase" id="phase-setup">
+  <div class="setup-grid">
+    <div>
+      <div id="firebase-notice" style="background:rgba(232,64,64,.08);border:1px solid rgba(232,64,64,.3);padding:12px 16px;margin-bottom:14px;font-family:DM Mono,monospace;font-size:12px;color:var(--red);display:none">
+        ⚠ Firebase 連線失敗。請前往 Firebase Console → Realtime Database → Rules，將規則改為 <code style="background:#1E1E2E;padding:2px 6px">.read: true, .write: true</code>
+        <a href="https://console.firebase.google.com/u/0/project/btt1-813ca/database/btt1-813ca-default-rtdb/rules" target="_blank" style="color:var(--gold);margin-left:8px">前往設定規則 →</a>
+      </div>
+      <div class="card">
+        <div class="card-title">新增玩家</div>
+        <div class="form-row"><div class="form-group" style="grid-column:1/-1"><label>玩家姓名</label><input type="text" id="inp-name" placeholder="輸入名字…" maxlength="20"></div></div>
+        <div class="form-row"><div class="form-group" style="grid-column:1/-1"><label>職業</label>
+          <select id="inp-occ" onchange="autoFillOccupation()">
+            <option value="">— 選擇職業 —</option>
+            <option value="註冊護士|28000|180000">註冊護士</option>
+            <option value="金融分析師|35000|230000">金融分析師</option>
+            <option value="醫生|42000|300000">醫生</option>
+            <option value="企業高管|50000|400000">企業高管</option>
+            <option value="創意總監|35000|250000">創意總監</option>
+            <option value="中學教師|26000|170000">中學教師</option>
+            <option value="項目經理|34000|220000">項目經理</option>
+            <option value="自媒體博主|30000|190000">自媒體博主</option>
+            <option value="商業攝影師|25000|200000">商業攝影師</option>
+            <option value="法務顧問|37000|245000">法務顧問</option>
+            <option value="電商營運總監|28000|180000">電商營運總監</option>
+            <option value="詐騙者|35000|350000">詐騙者</option>
+            <option value="心理輔導師|32000|200000">心理輔導師</option>
+            <option value="律師|40000|250000">律師</option>
+            <option value="工程師|33000|210000">工程師</option>
+            <option value="人力資源主管|29000|185000">人力資源主管</option>
+            <option value="活動策劃師|29000|185000">活動策劃師</option>
+            <option value="營養師|25000|160000">營養師</option>
+            <option value="市場營運經理|27000|175000">市場營運經理</option>
+            <option value="會計師|36000|240000">會計師</option>
+          </select>
+        </div></div>
+        <div class="form-row">
+          <div class="form-group"><label>月薪 ($)</label><input type="number" id="inp-salary" class="auto-field" readonly placeholder="自動填入"></div>
+          <div class="form-group"><label>年收入 ($)</label><input type="number" id="inp-annual" class="auto-field" readonly placeholder="自動填入"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>初始資產 ($)</label><input type="number" id="inp-initial" class="auto-field" readonly placeholder="自動填入"></div>
+          <div class="form-group">
+            <label>保險開支 ($30,000)</label>
+            <div style="display:flex;gap:0;height:38px">
+              <button type="button" id="ins-btn-y" onclick="setInsurance(true)"
+                style="flex:1;border:1px solid var(--gold);background:var(--gold);color:#000;font-family:'Noto Serif TC';font-size:14px;font-weight:700;cursor:pointer;transition:all .15s">
+                Y
+              </button>
+              <button type="button" id="ins-btn-n" onclick="setInsurance(false)"
+                style="flex:1;border:1px solid var(--border);background:var(--panel2);color:var(--text-dim);font-family:'Noto Serif TC';font-size:14px;font-weight:700;cursor:pointer;transition:all .15s">
+                N
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="form-row"><div class="form-group"><label>住宅開支 ($)</label><input type="number" id="inp-living" value="150000"></div></div>
+        <button class="btn btn-gold" style="width:100%;margin-top:6px" onclick="addPlayer()">＋ 加入玩家</button>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">遊戲提示</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:2">
+          <p>• 最多 <strong style="color:var(--gold)">20</strong> 位玩家參與</p>
+          <p>• 職業選定後薪酬與初始資產自動填入</p>
+          <p>• 保險開支：Y = $30,000 / N = $0（每回合）</p>
+          <p>• <span style="color:var(--red)">第八回合</span>：世界大戰，無需擲骰</p>
+          <p>• 共 <strong style="color:var(--gold)">10</strong> 個回合，結束後自動排名</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between">
+        <span>玩家列表</span>
+        <span id="player-count-label" style="font-size:13px;color:var(--text-dim);font-family:'DM Mono';letter-spacing:0">0 / 20</span>
+      </div>
+      <div id="player-list-wrap"><div class="empty-state"><div class="es-icon">👥</div><div>尚未加入任何玩家</div></div></div>
+      <div style="margin-top:18px;display:flex;gap:10px;justify-content:space-between;align-items:center">
+        <button onclick="manualRefresh()" style="font-family:DM Mono,monospace;font-size:11px;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;cursor:pointer">↻ 刷新</button>
+        <button class="btn btn-sm" onclick="resetAllPlayers()"
+          style="background:transparent;border:1px solid var(--red);color:var(--red);font-size:12px">
+          🗑 清除所有玩家
+        </button>
+        <button class="btn btn-gold" onclick="startGame()" id="start-btn" disabled>開始遊戲 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAMEPLAY -->
+<div class="phase" id="phase-gameplay">
+  <div class="gameplay-header">
+    <div class="round-display">
+      <!-- SVG animated round progress ring -->
+      <div class="round-ring-wrap">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="#2A2A3E" stroke-width="7"/>
+          <circle cx="40" cy="40" r="34" fill="none" stroke="url(#ringGrad)" stroke-width="7"
+            stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6"
+            transform="rotate(-90 40 40)" id="round-ring-arc" style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"/>
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#E8C96B"/>
+              <stop offset="100%" stop-color="#C8A84B"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="rr-label">
+          <div class="rr-num" id="round-num-display">1</div>
+          <div class="rr-sub">/ 10</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;color:var(--text-dim)">ROUND</div>
+        <div style="font-family:'DM Mono';font-size:11px;color:var(--text-dim);letter-spacing:2px" id="round-sub-label">回合 1 / 10</div>
+      </div>
+      <div id="war-badge" class="war-badge" style="display:none">⚔ 世界大戰 — 無需擲骰</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline btn-sm" onclick="switchPhase('setup')">← 玩家設定</button>
+      <button class="btn btn-outline btn-sm" onclick="switchPhase('leaderboard')">排行榜 →</button>
+    </div>
+  </div>
+  <div class="round-steps" id="round-steps"></div>
+  <div class="player-turn-grid">
+    <div id="player-list-sidebar">
+      <div style="font-family:'DM Mono';font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:9px">選擇玩家</div>
+      <div class="player-select-list" id="player-select-list"></div>
+    </div>
+    <div class="invest-panel" id="invest-panel">
+      <div class="empty-state"><div class="es-icon">←</div><div>請先從左側選擇玩家</div></div>
+    </div>
+  </div>
+  <div class="next-round-bar">
+    <div style="font-family:'DM Mono';font-size:13px;color:var(--text-dim)" id="round-progress-text"></div>
+    <button class="btn btn-gold" onclick="nextRound()" id="next-round-btn">下一回合 →</button>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="phase" id="phase-leaderboard">
+  <div class="lb-container">
+    <div class="lb-header">
+      <div class="lb-title">FINAL LEADERBOARD</div>
+      <div class="lb-subtitle">慾望快車 · 最終排名</div>
+      <div style="font-family:'DM Mono';font-size:11px;color:var(--text-dim);margin-top:6px" id="lb-round-note"></div>
+    </div>
+    <div id="lb-podium" style="margin-bottom:28px"></div>
+    <table class="lb-table">
+      <thead><tr>
+        <th style="text-align:center">排名</th><th>玩家</th><th>職業</th>
+        <th>現金</th><th>總資產</th><th>淨收益</th><th>結果</th>
+      </tr></thead>
+      <tbody id="lb-tbody"></tbody>
+    </table>
+    <div style="margin-top:22px;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="switchPhase('gameplay')">← 返回遊戲</button>
+      <button class="btn btn-gold" onclick="resetGame()">重新開始遊戲</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+<div id="debug-bar" style="position:fixed;bottom:0;left:0;right:0;background:#0A0A14;border-top:1px solid #2A2A3E;padding:6px 16px;font-family:DM Mono,monospace;font-size:11px;color:#8888AA;z-index:9998;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">載入中...</div>
+<div id="toast"></div>
+
+<!-- SCAMMER MODAL -->
+<div class="modal-overlay" id="scammer-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('scammer-modal')">✕</button>
+    <div class="modal-title">🎭 詐騙者：奪取同類資產</div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.7">
+      第七回合特權：詐騙者可從<strong style="color:var(--red)">每位</strong>與他持有相同投資產品的玩家，
+      奪取該產品的<strong style="color:var(--gold)">全部持倉及現金</strong>。
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">可奪取的資產（持有相同產品的玩家）</div>
+      <div id="scammer-targets"></div>
+    </div>
+    <div id="scammer-preview" style="display:none;background:rgba(232,64,64,.05);border:1px solid rgba(232,64,64,.3);padding:14px;margin-bottom:16px;font-family:'DM Mono';font-size:13px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('scammer-modal')">取消</button>
+      <button class="btn btn-sm" id="scammer-confirm-btn" onclick="executeScammer()"
+        style="background:rgba(232,64,64,.15);border:1px solid var(--red);color:var(--red);font-weight:700" disabled>
+        確認奪取
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SWAP MODAL -->
+<div class="modal-overlay" id="swap-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('swap-modal')">✕</button>
+    <div class="modal-title">🔄 資產互換</div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.7">
+      與另一位玩家互換<strong style="color:var(--gold)">所有現金及投資產品持倉</strong>（完整對調，不可局部）。
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">選擇互換對象</div>
+      <div id="swap-targets"></div>
+    </div>
+    <div id="swap-preview" style="display:none;background:rgba(200,168,75,.05);border:1px solid rgba(200,168,75,.2);padding:14px;margin-bottom:16px;font-family:'DM Mono';font-size:13px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('swap-modal')">取消</button>
+      <button class="btn btn-sm" id="swap-confirm-btn" onclick="executeSwap()"
+        style="background:linear-gradient(135deg,var(--
+<script>console.log("=== 慾望快車 JS START ===");
+
+var PRODUCTS=[
+  {id:'savings',   name:'穩健儲蓄',icon:'🏦',color:'#4080E8'},
+  {id:'bluechip',  name:'藍籌股',  icon:'📊',color:'#40C87A'},
+  {id:'tech',      name:'科技股',  icon:'💻',color:'#C840E8'},
+  {id:'realestate',name:'地產',    icon:'🏠',color:'#E88040'},
+  {id:'startup',   name:'創業基金',icon:'🚀',color:'#E84080'},
+  {id:'gold',      name:'黃金',    icon:'🥇',color:'#C8A84B'},
+];
+var DICE_MULT={
+  savings:   [1.05,1.06,1.07,1.08,1.09,1.10],
+  bluechip:  [0.92,1.05,1.10,1.12,1.15,0.95],
+  tech:      [0.75,0.85,1.15,1.25,1.35,0.80],
+  realestate:[0.88,0.94,1.08,1.12,1.18,0.90],
+  startup:   [0.65,0.75,1.20,1.30,1.45,0.70],
+  gold:      [0.95,1.03,1.05,1.07,1.10,0.97],
+};
+var WAR_MULT={savings:1.08,bluechip:0.50,tech:0.50,realestate:0.60,startup:0.40,gold:1.25};
+var BASE_PRICE={savings:10,bluechip:15,tech:8,realestate:25,startup:12,gold:18};
+
+var players=[],currentRound=1,currentPlayerIdx=0;
+var prices=Object.assign({},BASE_PRICE),priceHistory=[Object.assign({},BASE_PRICE)];
+var roundData=[];
+function emptyRoundData(){return{extraExpense:0,_extraUsed:false,trades:{},dice:null};}
+
+// ── ROLE CONSTANTS ───────────────────────────────────────────────────
+(function(){
+  var p=new URLSearchParams(location.search);
+  var h=(location.hash||'').replace('#','');
+  var isAdmin=p.has('admin')||h==='admin';
+  var isJoin=p.has('join')||h==='join';
+  var isPlayer=p.has('player')||h.startsWith('player');
+  var role=isAdmin?'admin':isPlayer?'player':isJoin?'join':'lobby';
+  var pIdx=isPlayer?parseInt(p.get('player')||h.replace('player=','')||'0'):null;
+  window.__ROLE=role;
+  window.__PLAYER_IDX=isNaN(pIdx)?null:pIdx;
+})();
+var ROLE=window.__ROLE||'lobby';
+var MY_PLAYER_IDX=window.__PLAYER_IDX;
+var IS_ADMIN=ROLE==='admin';
+var IS_PLAYER=ROLE==='player';
+var IS_LOBBY=ROLE==='lobby';
+var IS_JOIN=ROLE==='join';
+
+// ── FIREBASE REALTIME DATABASE ────────────────────────────────────────
+// Replace these with your own Firebase project config (free tier)
+// https://console.firebase.google.com → Create project → Realtime Database
+var FB_URL = 'https://btt1-813ca-default-rtdb.firebaseio.com';
+var FB_PATH = '/gameState.json';
+var FB_FULL = FB_URL + FB_PATH;
+
+var _lastSavedTs = 0;
+var _pollTimer = null;
+
+function saveState(){
+  try{
+    var s = {
+      players, currentRound, currentPlayerIdx,
+      prices, priceHistory, roundData,
+      _ts: Date.now()
+    };
+    _lastSavedTs = s._ts;
+    // Fire-and-forget PUT to Firebase
+    fetch(FB_FULL, {
+      method: 'PUT',
+      mode: 'cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(s)
+    }).then(function(r){
+      if(!r.ok) console.warn('Firebase save failed:', r.status);
+      updateDebugBar();
+    }).catch(function(e){ console.warn('Firebase save error:', e); });
+  } catch(e){ console.warn('saveState error:', e); }
+}
+
+function loadState(cb){
+  var done=false;
+  function finish(ok){
+    if(done)return;
+    done=true;
+    if(cb)cb(ok);
+  }
+
+  // Hard timeout — always proceed after 4s even if Firebase never responds
+  var timer=setTimeout(function(){
+    console.warn('loadState timeout — proceeding without data');
+    var sp=document.getElementById('spinner-msg');
+    if(sp)sp.textContent='離線模式';
+    finish(false);
+  }, 4000);
+
+  fetch(FB_FULL+'?ts='+Date.now(), {
+    method:'GET',
+    mode:'cors',
+    cache:'no-store'
+  })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(s){
+      clearTimeout(timer);
+      if(s){
+        players          = s.players       || [];
+        currentRound     = s.currentRound  || 1;
+        currentPlayerIdx = s.currentPlayerIdx || 0;
+        prices           = s.prices        || Object.assign({},BASE_PRICE);
+        priceHistory     = s.priceHistory  || [Object.assign({},BASE_PRICE)];
+        roundData        = s.roundData     || [];
+        _lastSavedTs     = s._ts           || 0;
+      }
+      finish(!!s);
+    })
+    .catch(function(e){
+      clearTimeout(timer);
+      console.warn('loadState error:', e.message||e);
+      var sp=document.getElementById('spinner-msg');
+      if(sp)sp.innerHTML='Firebase 連線失敗 — 請設定資料庫規則';
+      var n=document.getElementById('firebase-notice');
+      if(n)n.style.display='block';
+      // Proceed immediately — don't leave user on spinner
+      finish(false);
+    });
+}
+
+
+function manualRefresh(){
+  loadState(function(ok){
+    refreshUI();
+    updateDebugBar();
+    toast(ok ? '已刷新' : '無法連接資料庫', ok ? 'success' : 'error');
+  });
+}
+
+function updateDebugBar(){
+  var bar = document.getElementById('debug-bar');
+  if(!bar) return;
+  fetch(FB_FULL + '?ts=' + Date.now(), {cache:'no-store'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(s){
+      if(!s){ bar.textContent = 'Firebase: 無資料'; return; }
+      var valid = (s.players||[]).filter(function(p){
+        return p && p.name && p.name !== '__reserving__';
+      });
+      bar.textContent = '已登記: ' + valid.length + ' 人'
+        + (valid.length ? ' | ' + valid.map(function(p){return p.name;}).join(', ') : '')
+        + ' | 更新: ' + new Date(s._ts||0).toLocaleTimeString();
+      bar.style.color = 'var(--green)';
+    })
+    .catch(function(){ bar.textContent = 'Firebase: 連線失敗'; bar.style.color = 'var(--red)'; });
+}
+
+function refreshUI(){
+  var lobby    = document.getElementById('phase-lobby');
+  var setup    = document.getElementById('phase-setup');
+  var gameplay = document.getElementById('phase-gameplay');
+  if(lobby    && lobby.style.display === 'block'){ renderLobbyPlayerList(); renderLobbyQR(); }
+  if(setup    && setup.classList.contains('active')){ renderPlayerList(); }
+  if(gameplay && gameplay.classList.contains('active')){ renderGameplay(); }
+}
+
+function startPolling(){
+  // Poll Firebase every 2 seconds for cross-device live updates
+  _pollTimer = setInterval(function(){
+    fetch(FB_FULL + '?ts=' + Date.now(), {cache:'no-store',mode:'cors'})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(s){
+        if(!s || s._ts === _lastSavedTs) return;
+        _lastSavedTs = s._ts;
+        players       = s.players       || [];
+        currentRound  = s.currentRound  || 1;
+        currentPlayerIdx = s.currentPlayerIdx || 0;
+        prices        = s.prices        || Object.assign({},BASE_PRICE);
+        priceHistory  = s.priceHistory  || [Object.assign({},BASE_PRICE)];
+        roundData     = s.roundData     || [];
+        if(window.MY_PLAYER_IDX_OVERRIDE != null) currentPlayerIdx = window.MY_PLAYER_IDX_OVERRIDE;
+        refreshUI();
+        updateDebugBar();
+      })
+      .catch(function(e){ /* silent */ });
+  }, 2000);
+}
+
+// ── SVG HELPERS ────────────────────────────────────────────────
+
+function svgSparkline(pid,w=130,h=30){
+  var hist=priceHistory.map(function(ph){ return ph[pid]; });
+  if(hist.length<2)return ('<svg width="'+(w)+'" height="'+(h)+'"></svg>');
+  var mn=Math.min.apply(null,hist),mx=Math.max.apply(null,hist),rng=mx-mn||1;
+  var pts=hist.map(function(v,i){ return ((i/(hist.length-1))*w)+','+(h-((v-mn)/rng)*(h-4)-2); }).join(' ');
+  var col=hist[hist.length-1]>=hist[hist.length-2]?'#40C87A':'#E84040';
+  var lastX=(hist.length-1)/(hist.length-1)*w;
+  var lastY=h-((hist[hist.length-1]-mn)/rng)*(h-4)-2;
+  var firstY=h-((hist[0]-mn)/rng)*(h-4)-2;
+  return ('<svg width="'+(w)+'" height="'+(h)+'" viewBox="0 0 '+(w)+' '+(h)+'" style="display:block;margin-top:6px">\\n    <defs><linearGradient id="sg'+(pid)+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+(col)+'" stop-opacity=".25"/><stop offset="100%" stop-color="'+(col)+'" stop-opacity="0"/></linearGradient></defs>\\n    <path d="M0,'+(firstY)+' '+(hist.map(function(v,i){ return 'L'+((i/(hist.length-1))*w)+','+(h-((v-mn)/rng)*(h-4)-2); }).join(' '))+' L'+(w)+','+(h)+' L0,'+(h)+' Z" fill="url(#sg'+(pid)+')"/>\\n    <polyline points="'+(pts)+'" fill="none" stroke="'+(col)+'" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>\\n    <circle cx="'+(lastX)+'" cy="'+(lastY)+'" r="2.5" fill="'+(col)+'"/>\\n  </svg>');
+}
+
+function svgDiceFace(val,sz=72,active=false){
+  var bdr=active?'#C8A84B':'#2A2A3E';
+  var pip= function(cx,cy){ return ('<circle cx="'+(cx/100*sz)+'" cy="'+(cy/100*sz)+'" r="'+(sz*.072)+'" fill="'+(active?'#C8A84B':'#666688')+'"/>'); };
+  var pipMap={1:[[50,50]],2:[[26,26],[74,74]],3:[[26,26],[50,50],[74,74]],4:[[26,26],[74,26],[26,74],[74,74]],5:[[26,26],[74,26],[50,50],[26,74],[74,74]],6:[[26,26],[74,26],[26,50],[74,50],[26,74],[74,74]]};
+  var pips=val&&pipMap[val]?pipMap[val].map(function(p){ return pip(p[0],p[1]); }).join(''):('<text x="'+(sz/2)+'" y="'+(sz/2+7)+'" text-anchor="middle" font-family="\'DM Mono\'" font-size="'+(sz*.2)+'" fill="#333355">?</text>');
+  return ('<svg width="'+(sz)+'" height="'+(sz)+'" viewBox="0 0 '+(sz)+' '+(sz)+'">\\n    <defs><filter id="dsf"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="'+(active?'#C8A84B':'#000')+'" flood-opacity=".5"/></filter></defs>\\n    <rect x="4" y="4" width="'+(sz-8)+'" height="'+(sz-8)+'" rx="'+(sz*.13)+'" fill="#161622" stroke="'+(bdr)+'" stroke-width="2" filter="url(#dsf)"/>\\n    '+(active?('<rect x="4" y="4" width="'+(sz-8)+'" height="'+(sz-8)+'" rx="'+(sz*.13)+'" fill="none" stroke="'+(bdr)+'" stroke-width="1" opacity=".4"/>'):'')+'\\n    '+(pips)+'\\n  </svg>');
+}
+
+function svgAssetGauge(cash,invested,sz=72){
+  var total=cash+invested||1,cashPct=cash/total;
+  var r=sz*.38,cx=sz/2,cy=sz/2,circ=2*Math.PI*r;
+  var cashArc=cashPct*circ,invArc=(1-cashPct)*circ;
+  return ('<svg width="'+(sz)+'" height="'+(sz)+'" viewBox="0 0 '+(sz)+' '+(sz)+'" style="flex-shrink:0">\\n    <circle cx="'+(cx)+'" cy="'+(cy)+'" r="'+(r)+'" fill="none" stroke="#2A2A3E" stroke-width="7"/>\\n    <circle cx="'+(cx)+'" cy="'+(cy)+'" r="'+(r)+'" fill="none" stroke="#40C87A" stroke-width="7"\\n      stroke-dasharray="'+(cashArc)+' '+(circ)+'" stroke-dashoffset="'+(circ*.25)+'" stroke-linecap="round"\\n      transform="rotate(-90 '+(cx)+' '+(cy)+')"/>\\n    <circle cx="'+(cx)+'" cy="'+(cy)+'" r="'+(r)+'" fill="none" stroke="#C8A84B" stroke-width="7"\\n      stroke-dasharray="'+(invArc)+' '+(circ)+'" stroke-dashoffset="'+(circ*.25-cashArc)+'" stroke-linecap="round"\\n      transform="rotate(-90 '+(cx)+' '+(cy)+')"/>\\n    <text x="'+(cx)+'" y="'+(cy-3)+'" text-anchor="middle" font-family="\'DM Mono\'" font-size="9" fill="#8888AA">資產</text>\\n    <text x="'+(cx)+'" y="'+(cy+10)+'" text-anchor="middle" font-family="\'Bebas Neue\'" font-size="14" fill="#E8E8F0">'+(Math.round(cashPct*100))+'%</text>\\n    <text x="'+(cx)+'" y="'+(cy+21)+'" text-anchor="middle" font-family="\'DM Mono\'" font-size="7" fill="#8888AA">現金</text>\\n  </svg>');
+}
+
+function svgPortfolioPie(p,sz=60){
+  var totalInv=0,inv={};
+  // Value at current market price for portfolio breakdown
+  Object.keys(p.holdings).forEach(function(pid){var h=p.holdings[pid];if(h&&h.qty>0){var v=h.qty*prices[pid];inv[pid]=v;totalInv+=v;}});
+  if(!totalInv)return '';
+  var cx=sz/2,cy=sz/2,r=sz*.42;var start=-Math.PI/2,slices='';
+  PRODUCTS.forEach(function(prod){
+    if(!inv[prod.id])return;
+    var frac=inv[prod.id]/totalInv,end=start+frac*2*Math.PI;
+    var x1=cx+r*Math.cos(start),y1=cy+r*Math.sin(start),x2=cx+r*Math.cos(end),y2=cy+r*Math.sin(end);
+    slices+=('<path d="M'+(cx)+','+(cy)+' L'+(x1)+','+(y1)+' A'+(r)+','+(r)+' 0 '+(frac>.5?1:0)+',1 '+(x2)+','+(y2)+' Z" fill="'+(prod.color)+'" fill-opacity=".85"/>');
+    start=end;
+  });
+  return ('<svg width="'+(sz)+'" height="'+(sz)+'" viewBox="0 0 '+(sz)+' '+(sz)+'" style="display:block;flex-shrink:0">\\n    <circle cx="'+(cx)+'" cy="'+(cy)+'" r="'+(r+2)+'" fill="#161622"/>\\n    '+(slices)+'\\n    <circle cx="'+(cx)+'" cy="'+(cy)+'" r="'+(r*.42)+'" fill="#161622"/>\\n  </svg>');
+}
+
+function svgDiceBar(pid,rolledVal){
+  var mults=DICE_MULT[pid],bW=30,gap=8,h=40;
+  var mn=Math.min.apply(null,mults),mx=Math.max.apply(null,mults),rng=mx-mn||.01;
+  var totalW=(bW+gap)*6-gap;
+  var out='';
+  mults.forEach(function(m,i){
+    var x=i*(bW+gap),pct=(m-mn)/rng,bh=Math.max(4,pct*(h-14)),by=h-bh-14;
+    var col=m>=1?'#40C87A':'#E84040',isRolled=(i+1)===rolledVal;
+    var pctStr=((m-1)*100).toFixed(0);
+    out+=('<rect x="'+(x)+'" y="'+(by)+'" width="'+(bW)+'" height="'+(bh)+'" rx="2"\\n      fill="'+(col)+'" fill-opacity="'+(isRolled?1:.25)+'" '+(isRolled?('stroke="'+(col)+'" stroke-width="1.5"'):'')+'/>\\n    <text x="'+(x+bW/2)+'" y="'+(by-2)+'" text-anchor="middle" font-family="\'DM Mono\'" font-size="8" fill="'+(isRolled?col:'#555577')+'">'+(m>=1?'+':'')+(pctStr)+'%</text>\\n    <text x="'+(x+bW/2)+'" y="'+(h-2)+'" text-anchor="middle" font-family="\'DM Mono\'" font-size="9" fill="'+(isRolled?col:'#8888AA')+'">'+(i+1)+'</text>');
+  });
+  return ('<svg width="'+(totalW)+'" height="'+(h)+'" viewBox="0 0 '+(totalW)+' '+(h)+'" style="display:block;margin-top:8px" id="dice-bar-svg">'+(out)+'</svg>');
+}
+
+function svgWarBars(){
+  var items=[
+    {name:'穩健儲蓄',m:1.08,col:'#4080E8'},{name:'藍籌股',m:0.50,col:'#40C87A'},
+    {name:'科技股',m:0.50,col:'#C840E8'},{name:'地產',m:0.60,col:'#E88040'},
+    {name:'創業基金',m:0.40,col:'#E84080'},{name:'黃金',m:1.25,col:'#C8A84B'},
+  ];
+  var bH=9,gap=5,w=280;var out='',y=0;
+  items.forEach(function(item){
+    var barW=Math.min(Math.abs(item.m-1)*180,110);
+    var col=item.m>=1?item.col:'#E84040';
+    var sign=item.m>=1?'+':'-';
+    var pStr=((Math.abs(item.m-1))*100).toFixed(0)+'%';
+    out+=('<text x="0" y="'+(y+bH-1)+'" font-family="\'DM Mono\'" font-size="8" fill="#8888AA">'+(item.name)+'</text>\\n    <rect x="58" y="'+(y)+'" width="'+(barW)+'" height="'+(bH)+'" rx="2" fill="'+(col)+'" fill-opacity=".7"/>\\n    <text x="'+(58+barW+4)+'" y="'+(y+bH-1)+'" font-family="\'DM Mono\'" font-size="8" fill="'+(col)+'">'+(sign)+(pStr)+'</text>');
+    y+=bH+gap;
+  });
+  return ('<svg width="'+(w)+'" height="'+(y)+'" viewBox="0 0 '+(w)+' '+(y)+'" style="display:block;margin-top:8px">'+(out)+'</svg>');
+}
+
+function svgPodium(top3){
+  if(!top3||!top3.length)return '';
+  var W=560,H=180;
+  var pods=[{rank:2,x:50,ht:100,col:'#C0C0C0',medal:'🥈'},{rank:1,x:200,ht:140,col:'#FFD700',medal:'🥇'},{rank:3,x:350,ht:70,col:'#CD7F32',medal:'🥉'}];
+  var out='';
+  pods.forEach(function(d){
+    var p=top3[d.rank-1];if(!p)return;
+    var by=H-d.ht-10,nm=p.name.length>6?p.name.slice(0,5)+'…':p.name;
+    out+=('<g style="opacity:0;animation:fadeUp .6s '+((d.rank-1)*.2)+'s forwards">\\n      <rect x="'+(d.x)+'" y="'+(by)+'" width="130" height="'+(d.ht)+'" rx="3" fill="'+(d.col)+'" fill-opacity=".12" stroke="'+(d.col)+'" stroke-width="1.5"/>\\n      <text x="'+(d.x+65)+'" y="'+(by+d.ht*.6)+'" text-anchor="middle" font-family="\'Bebas Neue\'" font-size="38" fill="'+(d.col)+'" opacity=".2">'+(d.rank)+'</text>\\n      <text x="'+(d.x+65)+'" y="'+(by-26)+'" text-anchor="middle" font-size="22">'+(d.medal)+'</text>\\n      <text x="'+(d.x+65)+'" y="'+(by-7)+'" text-anchor="middle" font-family="\'Noto Serif TC\',serif" font-size="13" fill="#E8E8F0" font-weight="700">'+(nm)+'</text>\\n      <text x="'+(d.x+65)+'" y="'+(by+18)+'" text-anchor="middle" font-family="\'DM Mono\'" font-size="9" fill="'+(d.col)+'">$'+(Math.round(p.totalAssets).toLocaleString())+'</text>\\n    </g>');
+  });
+  return ('<style>@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}</style>\\n  <svg width="100%" height="'+(H+10)+'" viewBox="0 0 '+(W)+' '+(H+10)+'" style="max-width:'+(W)+'px;display:block;margin:0 auto">\\n    <line x1="20" y1="'+(H)+'" x2="'+(W-20)+'" y2="'+(H)+'" stroke="#2A2A3E" stroke-width="1"/>\\n    '+(out)+'\\n  </svg>');
+}
+
+// ── SETUP ─────────────────────────────────────────────────────
+function autoFillOccupation(){
+  var sel=document.getElementById('inp-occ').value;
+  if(!sel){['inp-salary','inp-annual','inp-initial'].forEach(function(id){ document.getElementById(id).value=''; });return;}
+  var[,salary,initial]=sel.split('|');
+  document.getElementById('inp-salary').value=salary;
+  document.getElementById('inp-annual').value=parseInt(salary)*12;
+  document.getElementById('inp-initial').value=initial;
+}
+function addPlayer(){
+  if(players.length>=20){toast('最多只能加入20位玩家','error');return;}
+  var name=document.getElementById('inp-name').value.trim();
+  var occ=document.getElementById('inp-occ').value;
+  if(!name){toast('請輸入玩家姓名','error');return;}
+  if(!occ){toast('請選擇職業','error');return;}
+  var[occName,salary,initial]=occ.split('|');
+  var insurance=(window._insuranceY!==false)?30000:0;
+  var living=parseInt(document.getElementById('inp-living').value)||150000;
+  players.push({name,occupation:occName,salary:parseInt(salary),annualIncome:parseInt(salary)*12,initialAsset:parseInt(initial),insurance,living,holdings:{},cashHistory:[],cash:parseInt(initial),totalAssets:parseInt(initial)});
+  roundData.push(Array.from({length:10},function(){ return emptyRoundData(); }));
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-occ').value='';
+  ['inp-salary','inp-annual','inp-initial'].forEach(function(id){ document.getElementById(id).value=''; });
+  setInsurance(true); // reset to Y after adding player
+  document.getElementById('inp-living').value=150000;
+  renderPlayerList();
+  saveState();
+  toast(('已加入 '+(name)),'success');
+}
+function removePlayer(idx){players.splice(idx,1);roundData.splice(idx,1);renderPlayerList();saveState();}
+function renderPlayerList(){
+  var wrap=document.getElementById('player-list-wrap');
+  if(!wrap)return;
+  // Only show fully registered players (skip empty/placeholder slots)
+  var valid=players.map(function(p,i){ return {p:p,i:i}; }).filter(function(obj){ var p=obj.p; return p&&p.name&&p.name!=='__reserving__'&&p.occupation; });
+  var countEl=document.getElementById('player-count-label');
+  if(countEl)countEl.textContent=valid.length+' / 20';
+  var startBtn=document.getElementById('start-btn');
+  if(startBtn)startBtn.disabled=valid.length<1;
+  if(!valid.length){wrap.innerHTML='<div class="empty-state"><div class="es-icon">👥</div><div>尚未加入任何玩家</div></div>';return;}
+  var h='<table class="player-table"><thead><tr><th>#</th><th>姓名</th><th>職業</th><th>年收入</th><th>初始資產</th><th></th></tr></thead><tbody>';
+  valid.forEach(function({p,i}){
+    h+='<tr><td><div class="player-badge">'+(i+1)+'</div></td><td><strong>'+p.name+'</strong></td><td><span class="tag">'+p.occupation+'</span></td>'
+      +'<td style="font-family:DM Mono,monospace;color:var(--gold)">$'+(p.annualIncome||0).toLocaleString()+'</td>'
+      +'<td style="font-family:DM Mono,monospace">$'+(p.initialAsset||0).toLocaleString()+'</td>'
+      +'<td><button class="btn btn-danger" onclick="removePlayer('+i+')">移除</button></td></tr>';
+  });
+  wrap.innerHTML=h+'</tbody></table>';
+}
+function startGame(){
+  if(!players.length)return;
+  currentRound=1;currentPlayerIdx=0;prices=Object.assign({},BASE_PRICE);priceHistory=[Object.assign({},BASE_PRICE)];
+  players.forEach(function(p,i){p.holdings={};p._round1Holdings=null;p.cash=p.initialAsset;p.totalAssets=p.initialAsset;p.cashHistory=[];roundData[i]=Array.from({length:10},function(){ return emptyRoundData(); });});
+  saveState();switchPhase('gameplay');renderGameplay();
+}
+
+// ── GAMEPLAY ──────────────────────────────────────────────────
+function renderGameplay(){
+  // Players can only view/interact with their own panel
+  if(IS_PLAYER && MY_PLAYER_IDX!==null && MY_PLAYER_IDX<players.length){
+    currentPlayerIdx=MY_PLAYER_IDX;
+  }
+  // Hide player selector sidebar for player view
+  var sidebarEl=document.getElementById('player-list-sidebar');
+  if(sidebarEl)sidebarEl.style.display=IS_PLAYER?'none':'';
+  var arc=document.getElementById('round-ring-arc');
+  if(arc){var circ=2*Math.PI*34;arc.style.strokeDashoffset=circ*(1-currentRound/10);}
+  document.getElementById('round-num-display').textContent=currentRound;
+  document.getElementById('round-sub-label').textContent=('回合 '+(currentRound)+' / 10');
+  document.getElementById('war-badge').style.display=currentRound===8?'block':'none';
+  var dots='';
+  for(var r=1;r<=10;r++)dots+=('<div class="step-dot '+(r<currentRound?'done':r===currentRound?'active':'')+'">'+(r===8?'⚔':r)+'</div>');
+  document.getElementById('round-steps').innerHTML=dots;
+  var pl='';
+  players.forEach(function(p,i){
+    var done=roundData[i][currentRound-1]._done;
+    pl+=('<div class="player-select-item '+(i===currentPlayerIdx?'active':'')+'" onclick="selectPlayer('+(i)+')">\\n      <div class="player-badge" style="'+(done?'background:linear-gradient(135deg,#40C87A,#208040)':'')+'">'+(done?'✓':i+1)+'</div>\\n      <div><div style="font-weight:700;font-size:14px">'+(p.name)+'</div><div style="font-size:11px;color:var(--text-dim);font-family:&quot;DM Mono&quot;">'+(p.occupation)+'</div></div>\\n      '+(done?'<div class="player-done-tick">✓</div>':'')+'\\n    </div>');
+  });
+  document.getElementById('player-select-list').innerHTML=pl;
+  renderInvestPanel();
+  updateRoundProgress();
+  updateMarketTicker();
+}
+
+function selectPlayer(idx){currentPlayerIdx=idx;renderGameplay();}
+
+function renderInvestPanel(){
+  var p=players[currentPlayerIdx];if(!p)return;
+  var rd=roundData[currentPlayerIdx][currentRound-1];
+  var isWar=currentRound===8;
+  // Per-round fixed expense deducted at round end
+  var fixedExpense = p.living + p.insurance;
+  var invVal=0;
+  // Value current holdings at post-dice price (if confirmed) else market price
+  var _adjP=(rd._done&&rd._adjPrice)?rd._adjPrice:null;
+  Object.keys(p.holdings).forEach(function(pid){
+    var h=p.holdings[pid];if(!h||h.qty<=0)return;
+    invVal+=h.qty*(_adjP?_adjP[pid]:prices[pid]);
+  });
+  var html='';
+
+  // Summary bar with gauge
+  // Build projected prices for this player (if dice entered)
+  var dv=rd.dice;
+  var projPrices={};
+  PRODUCTS.forEach(function(prod){
+    projPrices[prod.id]=dv&&!isWar?prices[prod.id]*DICE_MULT[prod.id][dv-1]
+                        :isWar?prices[prod.id]*WAR_MULT[prod.id]
+                        :prices[prod.id];
+  });
+  var projInvVal=0;
+  Object.keys(p.holdings).forEach(function(pid){var h=p.holdings[pid];if(h&&h.qty>0)projInvVal+=h.qty*projPrices[pid];});
+  var projTotal=Math.round(p.cash+projInvVal);
+  var totalDiff=projTotal-calcTotalAssets(currentPlayerIdx);
+
+  html+=('<div class="player-summary-bar">\\n    '+(svgAssetGauge(p.cash,dv?projInvVal:invVal,72))+'\\n    <div class="summary-item"><div class="summary-label">玩家</div><div class="summary-value gold">'+(p.name)+'</div></div>\\n    <div class="summary-item"><div class="summary-label">職業</div><div class="summary-value" style="font-size:13px">'+(p.occupation)+'</div></div>\\n    <div class="summary-item"><div class="summary-label">現金</div><div class="summary-value green">$'+(Math.round(p.cash).toLocaleString())+'</div></div>\\n    <div class="summary-item"><div class="summary-label">投資市值'+(dv?'（骰後）':'')+'</div><div class="summary-value gold">$'+(Math.round(dv?projInvVal:invVal).toLocaleString())+'</div></div>\\n    <div class="summary-item">\\n      <div class="summary-label">總資產'+(dv?'（預計）':'')+'</div>\\n      <div class="summary-value" style="color:#E8C96B">\\n        $'+((dv?projTotal:calcTotalAssets(currentPlayerIdx)).toLocaleString())+'\\n        '+(dv&&totalDiff!==0?('<span style="font-size:12px;color:'+(totalDiff>=0?'var(--green)':'var(--red)')+';margin-left:4px">'+(totalDiff>=0?'+':'')+'$'+(Math.abs(totalDiff).toLocaleString())+'</span>'):'')+'\\n      </div>\\n    </div>\\n    <div class="summary-item">\\n      <div class="summary-label">每回合收入</div>\\n      <div class="summary-value" style="font-size:13px;color:var(--green)">+$'+(p.annualIncome.toLocaleString())+'</div>\\n    </div>\\n    <div class="summary-item">\\n      <div class="summary-label">每回合固定開支</div>\\n      <div class="summary-value" style="font-size:13px;color:var(--red)">-$'+(fixedExpense.toLocaleString())+'</div>\\n    </div>\\n  </div>');
+
+  // Holdings with pie
+  var hKeys=Object.keys(p.holdings).filter(function(k){ return p.holdings[k].qty>0; });
+  if(hKeys.length){
+    html+=('<div class="holdings-mini"><div style="display:flex;align-items:flex-start;gap:14px">\\n      '+(svgPortfolioPie(p,64))+'\\n      <div style="flex:1"><div class="holdings-mini-title">當前持倉</div>');
+    hKeys.forEach(function(pid){
+      var h=p.holdings[pid],prod=PRODUCTS.find(function(x){ return x.id===pid; });
+      var cp=prices[pid];
+      // Projected post-dice price for this holding
+      var dv=rd.dice;
+      var projP=dv&&!isWar?cp*DICE_MULT[pid][dv-1]:isWar?cp*WAR_MULT[pid]:cp;
+      var projVal=h.qty*projP;
+      var g=(projP-h.avgPrice)/h.avgPrice*100;
+      html+=('<div class="holdings-row">\\n        <span class="h-name" style="color:'+(prod.color)+'">'+(prod.icon)+' '+(prod.name)+'</span>\\n        <span class="h-val">'+(h.qty.toLocaleString())+' 手</span>\\n        <span class="h-val">均 $'+(h.avgPrice.toFixed(2))+'</span>\\n        <span class="h-val">現 $'+(cp.toFixed(2))+(dv?(' <span style="color:'+(projP>=cp?'var(--green)':'var(--red)')+'">→ $'+(projP.toFixed(2))+'</span>'):'')+'</span>\\n        <span class="h-val '+(g>=0?'pos':'neg')+'">'+(g>=0?'+':'')+(g.toFixed(1))+'%</span>\\n        <span class="h-val '+(g>=0?'pos':'neg')+'">≈ $'+(Math.round(projVal).toLocaleString())+'</span>\\n      </div>');
+    });
+    html+='</div></div></div>';
+  }
+
+  // Extra expense
+  // Extra expense / income — once per round, locked after use
+  var extraVal = rd.extraExpense||0;
+  var extraUsed = rd._extraUsed||false;
+  var extraCol = extraVal>0?'var(--green)':extraVal<0?'var(--red)':'var(--text-dim)';
+  var extraHint = extraVal>0?('<span style="color:var(--green)">← 加入現金 $'+(extraVal.toLocaleString())+'</span>')
+                   :extraVal<0?('<span style="color:var(--red)">← 扣除現金 $'+(Math.abs(extraVal).toLocaleString())+'</span>')
+                   :'';
+  html+=('<div class="extra-expense-row">\\n    <label>額外收支 ($)</label>\\n    <input type="number" id="inp-extra" value="'+(extraVal)+'" placeholder="0"\\n      oninput="updateExtra(this.value)"\\n      '+(extraUsed?'disabled style="opacity:.5;cursor:not-allowed;border-color:var(--border)"':
+                  ('style="border-color:'+(extraVal!==0?extraCol:'')+'"'))+'>\\n    <div style="font-size:12px;font-family:&quot;DM Mono&quot;">\\n      '+(extraUsed
+        ? '<span style="color:var(--text-dim)">✓ 本回合已使用</span>'
+        : extraHint)+'\\n    </div>\\n  </div>');
+
+  // Product cards with sparklines
+  // Show projected post-dice price if dice already entered
+  var diceForCards=rd.dice;
+  html+=('<div style="font-family:&quot;DM Mono&quot;;font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:5px">選擇投資產品（六選一）'+(diceForCards?'<span style="color:var(--text-dim);margin-left:8px">· 預計回合後價格（骰 '+diceForCards+'）</span>':'')+'</div><div class="product-cards">');
+  PRODUCTS.forEach(function(prod){
+    var basePrice=prices[prod.id];
+    // Projected price = apply this player's dice mult
+    var projPrice=diceForCards&&!isWar ? basePrice*DICE_MULT[prod.id][diceForCards-1]
+                    : isWar ? basePrice*WAR_MULT[prod.id]
+                    : basePrice;
+    var lp=priceHistory.length>1?priceHistory[priceHistory.length-2][prod.id]:priceHistory[0][prod.id];
+    var chgFromBase=((basePrice-lp)/lp*100);
+    var chgProj=((projPrice-basePrice)/basePrice*100);
+    var held=p.holdings[prod.id]&&p.holdings[prod.id].qty>0,isSel=rd._selectedProduct===prod.id;
+    html+=('<div class="product-card '+(isSel?'selected':'')+'" onclick="selectProduct(\''+(prod.id)+'\')">\\n      <div class="pc-name" style="color:'+(prod.color)+'">'+(prod.icon)+' '+(prod.name)+'</div>\\n      <div style="display:flex;align-items:baseline;gap:8px">\\n        <div class="pc-price" style="color:'+(prod.color)+'">$'+(basePrice.toFixed(2))+'</div>\\n        '+(diceForCards?('<div style="font-family:&quot;DM Mono&quot;;font-size:11px;color:'+(chgProj>=0?'var(--green)':'var(--red)')+'">→ $'+(projPrice.toFixed(2))+'</div>'):'')+'\\n      </div>\\n      <div class="pc-change '+(chgProj!==0?(chgProj>=0?'up':'down'):(chgFromBase>=0?'up':'down'))+'">\\n        '+(diceForCards
+          ? ('骰後: '+(chgProj>=0?'▲':'▼')+' '+(Math.abs(chgProj).toFixed(1))+'%')
+          : ((chgFromBase>=0?'▲':'▼')+' '+(Math.abs(chgFromBase).toFixed(1))+'%'))+'\\n      </div>\\n      '+(svgSparkline(prod.id,128,28))+'\\n      '+(held?('<div class="pc-held">'+(p.holdings[prod.id].qty.toLocaleString())+' 手</div>'):'')+'\\n    </div>');
+  });
+  html+='</div>';
+
+  // Trade form
+  var selProd=rd._selectedProduct;
+  if(selProd){
+    var trade=rd.trades[selProd]||{buy:0,sell:0},prod=PRODUCTS.find(function(x){ return x.id===selProd; });
+    var buyPrice=prices[selProd]; // buy at current price
+    var sellPrice=dv?projPrices[selProd]:prices[selProd]; // sell at post-dice price
+    html+=('<div class="trade-form"><div class="trade-form-title" style="color:'+(prod.color)+'">'+(prod.icon)+' 買賣 — '+(prod.name)+'</div>\\n      <div style="font-family:&quot;DM Mono&quot;;font-size:10px;color:var(--text-dim);margin-bottom:10px">\\n        買入價格（當前）: <strong style="color:var(--gold)">$'+(buyPrice.toFixed(2))+'</strong>\\n        &nbsp;&nbsp;賣出價格（骰後）: <strong style="color:'+(dv?(sellPrice>=buyPrice?'var(--green)':'var(--red)'):'var(--text-dim)')+'">$'+(sellPrice.toFixed(2))+'</strong>\\n        '+(dv?('<span style="color:'+(sellPrice>=buyPrice?'var(--green)':'var(--red)')+'">('+(sellPrice>=buyPrice?'+':'')+((((sellPrice-buyPrice)/buyPrice)*100).toFixed(1))+'%)</span>'):'')+'\\n      </div>\\n      <div class="trade-inputs">\\n        <div class="form-group"><label>買入 (手數)</label><input type="number" id="inp-buy" value="'+(trade.buy)+'" min="0" placeholder="0" oninput="updateTrade(\'buy\',this.value)"></div>\\n        <div class="form-group"><label>賣出 (手數) — 骰後</label><input type="number" id="inp-sell" value="'+(trade.sell)+'" min="0" placeholder="0" oninput="updateTrade(\'sell\',this.value)"></div>\\n        <div class="form-group"><label>淨費用估算</label><input type="text" readonly class="auto-field" id="trade-cost-display" value="—"></div>\\n      </div></div>');
+  }
+
+  // Dice section
+  if(!isWar){
+    var dv=rd.dice,bdr=dv?'#C8A84B':'#2A2A3E';
+    html+=('<div class="dice-section">\\n      <div class="dice-input-wrap">\\n        <div style="font-family:&quot;DM Mono&quot;;font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase">擲骰點數</div>\\n        <!-- SVG dice visual -->\\n        <div id="dice-svg-face">'+(svgDiceFace(dv,72,!!dv))+'</div>\\n        <!-- Manual text input -->\\n        <input type="number" id="dice-input" min="1" max="6" value="'+(dv||'')+'" placeholder="1–6"\\n          oninput="setDice(this.value)"\\n          style="width:72px;height:30px;background:#161622;border:1px solid '+(bdr)+';color:#C8A84B;font-family:&quot;Bebas Neue&quot;;font-size:18px;text-align:center;outline:none;transition:border-color .2s;margin-top:5px;"\\n          onfocus="this.style.borderColor=\'#C8A84B\'">\\n        <div style="font-family:&quot;DM Mono&quot;;font-size:9px;color:var(--text-dim)">手動輸入</div>\\n      </div>\\n      <div class="dice-result-info">\\n        <div class="dice-result-label">擲骰結果</div>\\n        <div class="dice-result-text" id="dice-result-text">\\n          '+(dv?('骰面 <strong>'+(dv)+'</strong> — '+(selProd?getDiceEffect(selProd,dv):'（請先選擇投資產品）')):'請輸入實體骰子點數（1–6）')+'\\n        </div>\\n        '+(dv&&selProd?svgDiceBar(selProd,dv):'<div id="dice-bar-placeholder" style="margin-top:8px;height:40px"></div>')+'\\n      </div>\\n    </div>');
+  } else {
+    html+=('<div class="dice-section" style="background:rgba(232,64,64,.05);border-color:rgba(232,64,64,.3)">\\n      <svg width="72" height="72" viewBox="0 0 72 72" style="flex-shrink:0">\\n        <text x="36" y="50" text-anchor="middle" font-size="42">⚔️</text>\\n        <animateTransform attributeName="transform" type="rotate" values="-4 36 36;4 36 36;-4 36 36" dur="1s" repeatCount="indefinite"/>\\n      </svg>\\n      <div class="dice-result-info">\\n        <div class="dice-result-label" style="color:var(--red)">第八回合 · 世界大戰</div>\\n        <div class="dice-result-text">此回合無需擲骰。固定戰爭倍率結算。</div>\\n        '+(svgWarBars())+'\\n      </div>\\n    </div>');
+  }
+
+  // ── Special Actions ────────────────────────────────────────────────────
+  var isRound7=currentRound===7;
+  var isScammer=p.occupation==='詐騙者';
+  var hasOtherPlayers=players.length>1;
+  // Admin sees all special actions; players see none (swap/scammer are admin-only)
+  var canUseSpecial=IS_ADMIN||(!IS_PLAYER);
+
+  if(canUseSpecial&&(isRound7&&isScammer||hasOtherPlayers)){
+    html+='<div style="background:var(--panel);border:1px solid var(--border);padding:14px 18px;border-radius:1px">\\n      <div style="font-family:&quot;DM Mono&quot;;font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;gap:8px">\\n        <svg width="12" height="12" viewBox="0 0 12 12"><polygon points="6,1 11,10 1,10" fill="none" stroke="var(--gold)" stroke-width="1.5"/><text x="6" y="9.5" text-anchor="middle" font-size="6" fill="var(--gold)" font-family="monospace">!</text></svg>\\n        特殊行動 (Admin)\\n      </div>\\n      <div style="display:flex;gap:10px;flex-wrap:wrap">';
+
+    // Scammer steal — only shown in Round 7 for 詐騙者
+    if(isRound7&&isScammer){
+      html+=('<button class="btn btn-sm" onclick="openScammerModal('+(currentPlayerIdx)+')"\\n        style="background:rgba(232,64,64,.12);border:1px solid var(--red);color:var(--red);font-size:12px">\\n        🎭 詐騙者：奪取同類投資資產\\n      </button>');
+    }
+
+    // Asset swap — admin only, any round
+    if(hasOtherPlayers){
+      html+=('<button class="btn btn-sm" onclick="openSwapModal('+(currentPlayerIdx)+')"\\n        style="background:rgba(200,168,75,.1);border:1px solid var(--gold);color:var(--gold);font-size:12px">\\n        🔄 資產互換\\n      </button>');
+    }
+
+    html+='</div></div>';
+  }
+
+  html+='<div class="confirm-row"><button class="btn btn-outline btn-sm" onclick="clearPlayerTurn()">清除本回合</button><button class="btn btn-gold" onclick="confirmPlayerTurn()">確認本回合 ✓</button></div>';
+  document.getElementById('invest-panel').innerHTML=html;
+  updateTradeCost();
+}
+
+function getDiceEffect(pid,dice){
+  var m=DICE_MULT[pid][dice-1],pct=((m-1)*100).toFixed(0);
+  return ((PRODUCTS.find(function(x){ return x.id===pid; }).name)+' <strong style="color:'+(m>=1?'var(--green)':'var(--red)')+'">'+(m>=1?'+':'')+(pct)+'%</strong>');
+}
+
+function setDice(val){
+  var num=parseInt(val),rd=roundData[currentPlayerIdx][currentRound-1];
+
+  if(!val||isNaN(num)){
+    rd.dice=null;
+    renderInvestPanel(); // re-render so projections clear
+    return;
+  }
+  if(num<1||num>6){
+    var inp=document.getElementById('dice-input');
+    if(inp)inp.style.borderColor='#E84040';
+    toast('點數必須在 1–6 之間','error');
+    return;
+  }
+  rd.dice=num;
+  // Full re-render so projected prices update everywhere
+  renderInvestPanel();
+  // Restore focus to the dice input after re-render
+  var inp=document.getElementById('dice-input');
+  if(inp){inp.focus();inp.value=num;}
+}
+
+function selectProduct(pid){roundData[currentPlayerIdx][currentRound-1]._selectedProduct=pid;renderInvestPanel();}
+function updateExtra(v){
+  var num=v===''||v===null?0:parseInt(v);
+  roundData[currentPlayerIdx][currentRound-1].extraExpense=isNaN(num)?0:num;
+  // Live-update the hint label without full re-render
+  var extra=roundData[currentPlayerIdx][currentRound-1].extraExpense;
+  var hintEl=document.querySelector('.extra-expense-row div:last-child');
+  var inp=document.getElementById('inp-extra');
+  if(hintEl){
+    if(extra>0){hintEl.innerHTML=('<span style="color:var(--green)">← 加入現金 $'+(extra.toLocaleString())+'</span>');if(inp)inp.style.borderColor='var(--green)';}
+    else if(extra<0){hintEl.innerHTML=('<span style="color:var(--red)">← 扣除現金 $'+(Math.abs(extra).toLocaleString())+'</span>');if(inp)inp.style.borderColor='var(--red)';}
+    else{hintEl.innerHTML='';if(inp)inp.style.borderColor='';}
+  }
+}
+function updateTrade(type,v){
+  var rd=roundData[currentPlayerIdx][currentRound-1],sp=rd._selectedProduct;
+  if(!sp)return;
+  if(!rd.trades[sp])rd.trades[sp]={buy:0,sell:0};
+  rd.trades[sp][type]=parseInt(v)||0;
+  updateTradeCost();
+}
+function updateTradeCost(){
+  var el=document.getElementById('trade-cost-display');if(!el)return;
+  var rd=roundData[currentPlayerIdx][currentRound-1],sp=rd._selectedProduct;
+  if(!sp||!rd.trades[sp]){el.value='—';return;}
+  var t=rd.trades[sp];
+  var buyPrice=prices[sp];
+  // Sell at post-dice price if dice entered
+  var dv=rd.dice,isWar=currentRound===8;
+  var sellPrice=dv&&!isWar?prices[sp]*DICE_MULT[sp][dv-1]:isWar?prices[sp]*WAR_MULT[sp]:prices[sp];
+  var netCost=(t.buy||0)*buyPrice-(t.sell||0)*sellPrice;
+  el.value=((netCost<0?'-':'')+'$'+(Math.abs(Math.round(netCost)).toLocaleString()));
+}
+function clearPlayerTurn(){roundData[currentPlayerIdx][currentRound-1]=emptyRoundData();renderInvestPanel();}
+
+function confirmPlayerTurn(){
+  if(!players[currentPlayerIdx]||!roundData[currentPlayerIdx]||!roundData[currentPlayerIdx][currentRound-1]){toast('請先設定玩家','error');return;}
+  var p=players[currentPlayerIdx],rd=roundData[currentPlayerIdx][currentRound-1],isWar=currentRound===8;
+  if(!isWar&&!rd.dice){toast('請先輸入擲骰點數（1–6）！','error');return;}
+
+  var sp=rd._selectedProduct;
+  var diceVal=rd.dice;
+
+  // ── Compute this player's POST-dice prices for every product ──────────
+  // Dice result applies to ALL products this player holds (same dice roll for all).
+  // Buy happens at PRE-dice price; sell happens at POST-dice price.
+  var postPrices={};
+  PRODUCTS.forEach(function(prod){
+    if(isWar){
+      postPrices[prod.id]=prices[prod.id]*WAR_MULT[prod.id];
+    } else if(diceVal){
+      postPrices[prod.id]=prices[prod.id]*DICE_MULT[prod.id][diceVal-1];
+    } else {
+      postPrices[prod.id]=prices[prod.id];
+    }
+  });
+  rd._adjPrice=postPrices;
+
+  // ── Step 1: BUY at pre-dice (current) price ───────────────────────────
+  if(sp&&rd.trades[sp]){
+    var t=rd.trades[sp],buy=t.buy||0,sell=t.sell||0;
+    var preBuyPrice=prices[sp];
+    var held=p.holdings[sp]?p.holdings[sp].qty:0;
+
+    // Validate sell against current holdings
+    if(sell>held){toast(((PRODUCTS.find(function(x){ return x.id===sp; }).name)+' 持倉不足，無法賣出 '+(sell)+' 手'),'error');return;}
+
+    // Validate buy cost at pre-dice price
+    var cost=buy*preBuyPrice;
+    if(cost>p.cash){toast(('現金不足！需 $'+(cost.toLocaleString())+'，有 $'+(Math.round(p.cash).toLocaleString())),'error');return;}
+
+    // Execute buy (cost deducted at pre-dice price)
+    if(buy>0){
+      if(!p.holdings[sp])p.holdings[sp]={qty:0,avgPrice:preBuyPrice};
+      var h=p.holdings[sp];
+      h.avgPrice=(h.qty*h.avgPrice+buy*preBuyPrice)/(h.qty+buy);
+      h.qty+=buy;
+      p.cash-=cost;
+    }
+
+    // ── Step 2: SELL at post-dice price (dice result revealed AFTER trade) ──
+    if(sell>0){
+      var sellPrice=postPrices[sp];
+      var h=p.holdings[sp];
+      p.cash+=sell*sellPrice;
+      h.qty-=sell;
+      if(h.qty<=0)delete p.holdings[sp];
+    }
+  }
+
+  // ── Step 3: Store post-dice prices for asset valuation ──────────────
+  // DO NOT crystallise into cash — buy cost is always pre-dice price.
+  // Dice affects the MARKET VALUE of holdings, not the cash paid.
+  // rd._adjPrice is used by calcTotalAssets to value holdings correctly.
+  // h.avgPrice stays as the actual purchase average cost (unchanged by dice).
+
+  // ── Step 4: Extra expense ──────────────────────────────────────────────
+  // Apply extra expense once — mark used so it cannot be changed again
+  if(!rd._extraUsed){
+    p.cash+=(rd.extraExpense||0);
+    rd._extraUsed=true;
+  }
+
+  rd._done=true;
+
+  // Snapshot holdings at end of Round 1 (used by scammer in Round 7)
+  if(currentRound===1 && !p._round1Holdings){
+    p._round1Holdings={};
+    Object.keys(p.holdings).forEach(function(pid){
+      var h=p.holdings[pid];
+      if(h && h.qty>0) p._round1Holdings[pid]=h.qty;
+    });
+  }
+
+  saveState();toast(((p.name)+' 回合確認 ✓  總資產 $'+(calcTotalAssets(currentPlayerIdx).toLocaleString())),'success');
+  renderGameplay();
+}
+
+function calcTotalAssets(idx){
+  var p=players[idx];
+  // Value holdings at post-dice price if this round is confirmed, else at current market price
+  var rd=roundData[idx]&&roundData[idx][currentRound-1];
+  var adjP=(rd&&rd._done&&rd._adjPrice)?rd._adjPrice:null;
+  var t=p.cash;
+  Object.keys(p.holdings).forEach(function(pid){
+    var h=p.holdings[pid];
+    if(!h||h.qty<=0)return;
+    // Use post-dice price if available, otherwise current market price
+    var usePrice=adjP?adjP[pid]:prices[pid];
+    t+=h.qty*usePrice;
+  });
+  return Math.round(t);
+}
+function updateRoundProgress(){
+  var done=players.filter(function(_,i){ return roundData[i][currentRound-1]._done; }).length;
+  document.getElementById('round-progress-text').textContent=('本回合完成: '+(done)+' / '+(players.length)+' 玩家');
+  document.getElementById('next-round-btn').textContent=currentRound<10?'下一回合 →':'結算遊戲 →';
+}
+function nextRound(){
+  applyRoundEnd();                          // deduct fixed expenses, advance prices
+  if(currentRound>=10){switchPhase('leaderboard');renderLeaderboard();return;}
+  currentRound++;
+  // ── Credit annual income at the START of every new round (rounds 2–10) ──
+  players.forEach(function(p){
+    p.cash += p.annualIncome;
+  });
+  currentPlayerIdx=0;
+  saveState();
+  renderGameplay();
+}
+function applyRoundEnd(){
+  // ── Advance global market prices for next-round display ───────────────
+  // Each player already had their own dice applied to their holdings in
+  // confirmPlayerTurn(). Here we just move the global price display forward
+  // using the MEDIAN dice across all players (pure UI/sparkline continuity).
+  var isWar=currentRound===8,newP={};
+  PRODUCTS.forEach(function(prod){
+    if(isWar){
+      newP[prod.id]=prices[prod.id]*WAR_MULT[prod.id];
+    } else {
+      var diceVals=players.map(function(_,i){ return roundData[i][currentRound-1].dice; }).filter(Boolean);
+      if(diceVals.length){
+        var sorted=diceVals.slice().sort(function(a,b){return a-b;});
+        var median=sorted[Math.floor(sorted.length/2)];
+        newP[prod.id]=prices[prod.id]*DICE_MULT[prod.id][median-1];
+      } else {
+        newP[prod.id]=prices[prod.id];
+      }
+    }
+  });
+  priceHistory.push(Object.assign({},newP));
+  prices=newP;
+
+  // ── Per-round fixed expenses: deduct living + insurance (Y=30000, N=0) ────
+  players.forEach(function(p){
+    var fixedExpense = p.living + p.insurance;
+    p.cash -= fixedExpense;
+    p.cashHistory.push(p.cash);
+  });
+}
+function updateMarketTicker(){
+  var prev=priceHistory.length>1?priceHistory[priceHistory.length-2]:priceHistory[0];
+  document.getElementById('marketTicker').innerHTML=PRODUCTS.map(function(prod){
+    var c=prices[prod.id],pr=prev[prod.id]||c,chg=((c-pr)/pr*100).toFixed(1);
+    return ('<div class="ticker-item"><span style="color:'+(prod.color)+'">'+(prod.icon)+' '+(prod.name)+'</span><span style="color:'+(prod.color)+';font-weight:500">$'+(c.toFixed(2))+'</span><span class="'+(parseFloat(chg)>=0?'ticker-up':'ticker-down')+'">'+(parseFloat(chg)>=0?'▲':'▼')+' '+(Math.abs(chg))+'%</span></div>');
+  }).join('');
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────────
+function renderLeaderboard(){
+  document.getElementById('lb-round-note').textContent=('回合 '+(currentRound)+' / 10 · '+(new Date().toLocaleDateString('zh-TW')));
+  var scored=players.map(function(p,i){ return Object.assign({},p,{idx:i,totalAssets:calcTotalAssets(i),netGain:calcTotalAssets(i)-p.initialAsset}); }).sort(function(a,b){return b.totalAssets-a.totalAssets;});
+  document.getElementById('lb-podium').innerHTML=svgPodium(scored.slice(0,3));
+  var h='';
+  scored.forEach(function(p,rank){
+    var n=rank+1,cls=n===1?'gold':n===2?'silver':n===3?'bronze':'',crown=n===1?'🥇':n===2?'🥈':n===3?'🥉':'';
+    var pos=p.netGain>=0,gs=(pos?'+':'')+'$'+Math.abs(p.netGain).toLocaleString();
+    h+=('<tr><td class="lb-rank '+(cls)+'" style="text-align:center">'+(crown||n)+'</td><td class="lb-name"><strong>'+(p.name)+'</strong></td><td><span class="tag">'+(p.occupation)+'</span></td><td style="font-family:&quot;DM Mono&quot;">$'+(Math.round(p.cash).toLocaleString())+'</td><td class="lb-asset">$'+(p.totalAssets.toLocaleString())+'</td><td class="lb-gain '+(pos?'pos':'neg')+'">'+(gs)+'</td><td><span class="lb-result '+(pos?'profit':'loss')+'">'+(pos?'✅ 盈利':'❌ 虧損')+'</span></td></tr>');
+  });
+  document.getElementById('lb-tbody').innerHTML=h;
+}
+function resetAllPlayers(){
+  if(!confirm('確認清除所有玩家登記資料？'))return;
+  players=[];roundData=[];
+  saveState(); // writes empty players to Firebase
+  renderPlayerList();
+  renderLobbyPlayerList();
+  toast('已清除所有玩家，所有裝置將同步更新','success');
+}
+function resetGame(){players=[];roundData=[];currentRound=1;currentPlayerIdx=0;prices=Object.assign({},BASE_PRICE);priceHistory=[Object.assign({},BASE_PRICE)];saveState();switchPhase('setup');renderPlayerList();toast('遊戲已重置，所有裝置將同步更新','success');}
+
+function switchPhase(phase){
+  // Only operate on known phases; don't accidentally reveal lobby/player-register
+  var knownPhases=['phase-setup','phase-gameplay','phase-leaderboard'];
+  document.querySelectorAll('.phase').forEach(function(el){
+    if(knownPhases.includes(el.id)){
+      el.classList.remove('active');
+      el.style.display='none';
+    }
+  });
+  document.querySelectorAll('.phase-btn').forEach(function(el){el.classList.remove('active');});
+  var el=document.getElementById('phase-'+phase);
+  if(el){el.style.display='block';el.classList.add('active');}
+  var idx={setup:0,gameplay:1,leaderboard:2}[phase];
+  var btns=document.querySelectorAll('.phase-btn');
+  if(btns[idx])btns[idx].classList.add('active');
+  if(phase==='gameplay')renderGameplay();
+  if(phase==='leaderboard')renderLeaderboard();
+}
+
+var toastTimer;
+function toast(msg,type='info'){
+  var el=document.getElementById('toast');el.textContent=msg;el.className=('show '+(type));
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},2800);
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ============================================================
+// SCAMMER STEAL (Round 7 only — occupation === '詐騙者')
+// ============================================================
+var _scammerIdx=-1;
+
+function openScammerModal(scammerIdx){
+  _scammerIdx=scammerIdx;
+  var scammer=players[scammerIdx];
+  var el=document.getElementById('scammer-targets');
+  document.getElementById('scammer-preview').style.display='none';
+  document.getElementById('scammer-confirm-btn').disabled=true;
+
+  // Determine top product from ROUND 1 holdings snapshot
+  var r1=scammer._round1Holdings||{};
+  var r1Prods=Object.keys(r1).filter(function(pid){ return r1[pid]>0; });
+  if(r1Prods.length===0){
+    el.innerHTML='<div style="color:var(--text-dim);font-family:&quot;DM Mono&quot;;font-size:13px;padding:12px">\\n      詐騙者在第一回合沒有任何投資持倉，無法使用此能力。</div>';
+    openModal('scammer-modal');return;
+  }
+
+  // Pick the product with the largest qty in Round 1
+  var topPid=r1Prods.reduce(function(best,pid){return r1[pid]>r1[best]?pid:best;}, r1Prods[0]);
+  var topProd=PRODUCTS.find(function(x){ return x.id===topPid; });
+  var topQty=r1[topPid]; // quantity from Round 1 snapshot
+
+  // Build target list: all OTHER players who hold topPid
+  var html=('<div style="font-family:&quot;DM Mono&quot;;font-size:11px;color:var(--text-dim);margin-bottom:10px">\\n    第一回合最大持倉：\\n    <strong style="color:'+(topProd.color)+'">'+(topProd.icon)+' '+(topProd.name)+' '+(topQty.toLocaleString())+' 手</strong>\\n    — 奪取所有玩家的此產品持倉\\n  </div>');
+
+  var anyMatch=false;
+  var totalStealQty=0, totalStealVal=0;
+
+  players.forEach(function(victim,vi){
+    if(vi===scammerIdx)return;
+    var vh=victim.holdings[topPid];
+    if(!vh||vh.qty<=0)return;
+    anyMatch=true;
+    totalStealQty+=vh.qty;
+    totalStealVal+=vh.qty*vh.avgPrice;
+    html+=('<div class="steal-product-row has-match">\\n      <div style="flex:1">\\n        <span style="font-weight:700">'+(victim.name)+'</span>\\n        <span style="color:var(--text-dim);font-size:11px;margin-left:6px">('+(victim.occupation)+')</span>\\n      </div>\\n      <div style="font-family:&quot;DM Mono&quot;;font-size:12px;color:'+(topProd.color)+'">\\n        '+(vh.qty.toLocaleString())+' 手 · ~$'+(Math.round(vh.qty*vh.avgPrice).toLocaleString())+'\\n      </div>\\n    </div>');
+  });
+
+  if(!anyMatch){
+    el.innerHTML=html+('<div style="color:var(--text-dim);font-family:&quot;DM Mono&quot;;font-size:13px;padding:10px 0">\\n      沒有其他玩家持有 '+(topProd.name)+'。</div>');
+    openModal('scammer-modal');return;
+  }
+
+  el.innerHTML=html;
+
+  // Preview
+  var prev=document.getElementById('scammer-preview');
+  prev.innerHTML=('<div style="color:var(--red);font-weight:700;margin-bottom:8px">奪取預覽</div>\\n    <div>'+(topProd.icon)+' '+(topProd.name)+': 共奪取\\n      <strong style="color:'+(topProd.color)+'">+'+(totalStealQty.toLocaleString())+' 手</strong>\\n      （市值約 $'+(Math.round(totalStealVal).toLocaleString())+'）\\n    </div>');
+  prev.style.display='block';
+  document.getElementById('scammer-confirm-btn').disabled=false;
+  openModal('scammer-modal');
+}
+
+function executeScammer(){
+  if(_scammerIdx<0)return;
+  var scammer=players[_scammerIdx];
+
+  // Re-derive topPid from Round 1 snapshot (consistent with modal)
+  var r1=scammer._round1Holdings||{};
+  var r1Prods=Object.keys(r1).filter(function(pid){ return r1[pid]>0; });
+  if(!r1Prods.length)return;
+  var topPid=r1Prods.reduce(function(best,pid){return r1[pid]>r1[best]?pid:best;}, r1Prods[0]);
+  var topProd=PRODUCTS.find(function(x){ return x.id===topPid; });
+
+  var stolen=0;
+  players.forEach(function(victim,vi){
+    if(vi===_scammerIdx)return;
+    var vh=victim.holdings[topPid];
+    if(!vh||vh.qty<=0)return;
+    var qty=vh.qty, avgP=vh.avgPrice;
+    // Merge into scammer with weighted avg price
+    if(!scammer.holdings[topPid])scammer.holdings[topPid]={qty:0,avgPrice:avgP};
+    var sh=scammer.holdings[topPid];
+    sh.avgPrice=(sh.qty*sh.avgPrice+qty*avgP)/(sh.qty+qty);
+    sh.qty+=qty;
+    stolen+=qty;
+    delete victim.holdings[topPid];
+  });
+
+  saveState();
+  closeModal('scammer-modal');
+  toast(('詐騙者 '+(scammer.name)+' 奪取了所有玩家的 '+(topProd.icon)+(topProd.name)+' 共 '+(stolen.toLocaleString())+' 手！'),'success');
+  renderGameplay();
+}
+
+// ============================================================
+// ASSET SWAP
+// ============================================================
+var _swapA=-1,_swapB=-1;
+
+function openSwapModal(playerAIdx){
+  _swapA=playerAIdx;_swapB=-1;
+  var pA=players[playerAIdx];
+
+  var el=document.getElementById('swap-targets');
+  document.getElementById('swap-preview').style.display='none';
+  document.getElementById('swap-confirm-btn').disabled=true;
+
+  var html='';
+  players.forEach(function(p,i){
+    if(i===playerAIdx)return;
+    // Calc total assets for each
+    var totalA=calcTotalAssets(playerAIdx),totalB=calcTotalAssets(i);
+    var diff=totalB-totalA;
+    var diffCol=diff>=0?'var(--green)':'var(--red)';
+    html+=('<div class="player-option" id="swap-opt-'+(i)+'" onclick="selectSwapTarget('+(i)+')">\\n      <div class="player-badge" style="flex-shrink:0">'+(i+1)+'</div>\\n      <div style="flex:1">\\n        <div style="font-weight:700;font-size:14px">'+(p.name)+' <span style="color:var(--text-dim);font-size:11px">('+(p.occupation)+')</span></div>\\n        <div style="font-family:&quot;DM Mono&quot;;font-size:11px;color:var(--text-dim);margin-top:2px">\\n          現金 $'+(Math.round(p.cash).toLocaleString())+' · 總資產 $'+(totalB.toLocaleString())+'\\n          <span style="color:'+(diffCol)+';margin-left:6px">'+(diff>=0?'↑':'↓')+(diff>=0?'+':'')+'$'+(Math.abs(diff).toLocaleString())+'</span>\\n        </div>\\n      </div>\\n      <!-- Mini SVG indicator -->\\n      <svg width="20" height="20" viewBox="0 0 20 20" id="swap-check-'+(i)+'" style="opacity:0;transition:opacity .2s">\\n        <circle cx="10" cy="10" r="9" fill="none" stroke="var(--gold)" stroke-width="1.5"/>\\n        <polyline points="5,10 9,14 15,7" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"/>\\n      </svg>\\n    </div>');
+  });
+  el.innerHTML=html;
+  openModal('swap-modal');
+}
+
+function selectSwapTarget(bIdx){
+  _swapB=bIdx;
+  // Highlight selected
+  document.querySelectorAll('.player-option').forEach(function(el){el.classList.remove('selected-opt');});
+  document.querySelectorAll('[id^="swap-check-"]').forEach(function(el){el.style.opacity='0';});
+  var opt=document.getElementById(('swap-opt-'+(bIdx)));
+  if(opt)opt.classList.add('selected-opt');
+  var chk=document.getElementById(('swap-check-'+(bIdx)));
+  if(chk)chk.style.opacity='1';
+
+  // Build preview
+  var pA=players[_swapA],pB=players[bIdx];
+  var hA=JSON.stringify(Object.keys(pA.holdings).filter(function(k){ return pA.holdings[k]&&pA.holdings[k].qty>0; }).map(function(pid){
+    var prod=PRODUCTS.find(function(x){ return x.id===pid; });
+    return ((prod.icon)+(prod.name)+' '+(pA.holdings[pid].qty.toLocaleString())+'手');
+  })).slice(1,-1).replace(/"/g,'').replace(/,/g,'、')||'無';
+  var hB=JSON.stringify(Object.keys(pB.holdings).filter(function(k){ return pB.holdings[k]&&pB.holdings[k].qty>0; }).map(function(pid){
+    var prod=PRODUCTS.find(function(x){ return x.id===pid; });
+    return ((prod.icon)+(prod.name)+' '+(pB.holdings[pid].qty.toLocaleString())+'手');
+  })).slice(1,-1).replace(/"/g,'').replace(/,/g,'、')||'無';
+
+  var prev=document.getElementById('swap-preview');
+  prev.innerHTML=('\\n    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center">\\n      <div>\\n        <div style="color:var(--gold);font-weight:700;margin-bottom:5px">'+(pA.name)+'</div>\\n        <div>現金: $'+(Math.round(pA.cash).toLocaleString())+'</div>\\n        <div style="color:var(--text-dim);font-size:11px;margin-top:3px">持倉: '+(hA)+'</div>\\n        <div style="color:var(--text-dim);font-size:11px;margin-top:1px">總資產: $'+(calcTotalAssets(_swapA).toLocaleString())+'</div>\\n      </div>\\n      <div style="text-align:center">\\n        <svg width="32" height="24" viewBox="0 0 32 24">\\n          <path d="M2,8 L22,8 L16,2 M22,8 L16,14" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\\n          <path d="M30,16 L10,16 L16,10 M10,16 L16,22" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>\\n        </svg>\\n      </div>\\n      <div>\\n        <div style="color:var(--blue);font-weight:700;margin-bottom:5px">'+(pB.name)+'</div>\\n        <div>現金: $'+(Math.round(pB.cash).toLocaleString())+'</div>\\n        <div style="color:var(--text-dim);font-size:11px;margin-top:3px">持倉: '+(hB)+'</div>\\n        <div style="color:var(--text-dim);font-size:11px;margin-top:1px">總資產: $'+(calcTotalAssets(bIdx).toLocaleString())+'</div>\\n      </div>\\n    </div>');
+  prev.style.display='block';
+  document.getElementById('swap-confirm-btn').disabled=false;
+}
+
+function executeSwap(){
+  if(_swapA<0||_swapB<0)return;
+  var pA=players[_swapA],pB=players[_swapB];
+
+  // Swap cash
+  var tmpCash=pA.cash;
+  pA.cash=pB.cash;
+  pB.cash=tmpCash;
+
+  // Swap holdings (deep copy)
+  var tmpHoldings=JSON.parse(JSON.stringify(pA.holdings));
+  pA.holdings=JSON.parse(JSON.stringify(pB.holdings));
+  pB.holdings=tmpHoldings;
+
+  saveState();
+  closeModal('swap-modal');
+  toast(((pA.name)+' ↔ '+(pB.name)+' 資產互換完成！'),'success');
+  renderGameplay();
+}
+
+// Insurance Y/N toggle state
+window._insuranceY = true; // default Y
+window._regInsuranceY = true;
+function setInsurance(isY){
+  window._insuranceY = isY;
+  var btnY = document.getElementById('ins-btn-y');
+  var btnN = document.getElementById('ins-btn-n');
+  if(!btnY||!btnN) return;
+  if(isY){
+    btnY.style.background='var(--gold)'; btnY.style.color='#000'; btnY.style.borderColor='var(--gold)';
+    btnN.style.background='var(--panel2)'; btnN.style.color='var(--text-dim)'; btnN.style.borderColor='var(--border)';
+  } else {
+    btnN.style.background='var(--gold)'; btnN.style.color='#000'; btnN.style.borderColor='var(--gold)';
+    btnY.style.background='var(--panel2)'; btnY.style.color='var(--text-dim)'; btnY.style.borderColor='var(--border)';
+  }
+}
+
+
+// ── ROLE INITIALISATION ────────────────────────────────────────────────
+function showView(){
+  // Show the correct view based on role — called immediately, no Firebase needed
+  var anyDone=roundData.some(function(rd){return rd&&rd[0]&&rd[0]._done;});
+
+  ['phase-setup','phase-lobby','phase-player-register','phase-gameplay','phase-leaderboard'].forEach(function(id){
+    try{
+      var el=document.getElementById(id);
+      if(el&&el.classList){el.classList.remove('active');el.style.display='none';}
+    }catch(e){}
+  });
+
+  function show(id,asActive){
+    var el=document.getElementById(id);
+    if(!el)return;
+    el.style.display='block';
+    if(asActive)el.classList.add('active');
+  }
+
+  if(IS_LOBBY){
+    show('phase-lobby');
+    document.querySelectorAll('.phase-btn').forEach(function(b){b.style.display='none';});
+    renderLobbyQR();
+    renderLobbyPlayerList();
+  } else if(IS_JOIN){
+    document.querySelectorAll('.phase-btn').forEach(function(b){b.style.display='none';});
+    show('phase-player-register');
+    updateMarketTicker();
+  } else if(IS_PLAYER){
+    document.querySelectorAll('.phase-btn').forEach(function(b){b.style.display='none';});
+    var me=players[MY_PLAYER_IDX];
+    if(!me||!me.name){
+      show('phase-player-register');
+    } else {
+      show('phase-gameplay',true);
+      renderGameplay();
+    }
+    updateMarketTicker();
+  } else if(IS_ADMIN){
+    var badge=document.createElement('span');
+    badge.style.cssText='font-family:DM Mono,monospace;font-size:11px;background:rgba(200,168,75,.15);border:1px solid var(--gold);color:var(--gold);padding:4px 10px;letter-spacing:2px;margin-right:8px';
+    badge.textContent='ADMIN';
+    var pi=document.querySelector('.phase-indicator');
+    if(pi&&!document.querySelector('.admin-badge')){badge.className='admin-badge';pi.prepend(badge);}
+    if(anyDone){
+      show('phase-gameplay',true);
+      renderGameplay();
+    } else {
+      show('phase-setup',true);
+      renderPlayerList();
+    }
+    updateMarketTicker();
+  } else {
+    show('phase-setup',true);
+    renderPlayerList();
+    updateMarketTicker();
+  }
+}
+
+function initByRole(){
+  ['phase-setup','phase-lobby','phase-player-register','phase-gameplay','phase-leaderboard'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){el.style.display='none';if(el.classList)el.classList.remove('active');}
+  });
+  function show(id,act){
+    var el=document.getElementById(id);
+    if(!el)return;
+    el.style.display='block';
+    if(act&&el.classList)el.classList.add('active');
+  }
+  var anyDone=roundData.some(function(rd){return rd&&rd[0]&&rd[0]._done;});
+  if(IS_LOBBY){
+    show('phase-lobby');
+    document.querySelectorAll('.phase-btn').forEach(function(b){b.style.display='none';});
+    try{renderLobbyQR();}catch(e){}
+    try{renderLobbyPlayerList();}catch(e){}
+  }else if(IS_JOIN){
+    document.querySelectorAll('.phase-btn').forEach(function(b){b.style.display='none';});
+    show('phase-player-register');
+    try{updateMarketTicker();}catch(e){}
+  }else if(IS_PLAYER){
+    document.querySelectorAll('.phase-btn').forEach(function(b){b.style.display='none';});
+    var me=players[MY_PLAYER_IDX];
+    if(!me||!me.name){show('phase-player-register');}
+    else{show('phase-gameplay',true);try{renderGameplay();}catch(e){}}
+    try{updateMarketTicker();}catch(e){}
+  }else if(IS_ADMIN){
+    var ab=document.createElement('span');
+    ab.style.cssText='font-family:DM Mono,monospace;font-size:11px;background:rgba(200,168,75,.15);border:1px solid var(--gold);color:var(--gold);padding:4px 10px;letter-spacing:2px;margin-right:8px';
+    ab.textContent='ADMIN';ab.className='admin-badge';
+    var pi=document.querySelector('.phase-indicator');
+    if(pi&&!document.querySelector('.admin-badge'))pi.prepend(ab);
+    if(anyDone){show('phase-gameplay',true);try{renderGameplay();}catch(e){};}
+    else{show('phase-setup',true);try{renderPlayerList();}catch(e){};}
+    try{updateMarketTicker();}catch(e){}
+  }else{
+    show('phase-setup',true);
+    try{renderPlayerList();}catch(e){}
+    try{updateMarketTicker();}catch(e){}
+  }
+  startPolling();
+  setTimeout(function(){
+    loadState(function(ok){
+      if(ok)try{refreshUI();}catch(e){}
+      try{updateDebugBar();}catch(e){}
+    });
+  },500);
+  console.log("=== initByRole done, ROLE="+ROLE);
+}
+// ── LOBBY QR CODE ─────────────────────────────────────────────────────
+function getJoinUrl(){
+  var base=location.origin+location.pathname;
+  return location.protocol==='file:'?base+'#join':base+'?join=1';
+}
+function buildQR(url){
+  try{
+    var el=document.getElementById('qr-canvas');
+    if(!el)return;
+    el.innerHTML='';
+    var img=document.createElement('img');
+    img.style.cssText='width:180px;height:180px;display:block;border:3px solid #C8A84B;';
+    img.alt='QR';
+    var apis=['https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(url),'https://chart.googleapis.com/chart?chs=180x180&cht=qr&chl='+encodeURIComponent(url)];
+    var idx=0;
+    img.onerror=function(){idx++;if(idx<apis.length){img.src=apis[idx];}else{el.innerHTML='<div style="padding:10px;background:#1E1E2E;border:2px solid #C8A84B;font-family:monospace;font-size:10px;color:#C8A84B;word-break:break-all;max-width:200px">'+url+'</div>';}};
+    img.src=apis[0];
+    el.appendChild(img);
+  }catch(e){console.warn('buildQR:',e.message);}
+}
+var _qrBuilt=false;
+function renderLobbyQR(){
+  var joinUrl=getJoinUrl();
+  var lbl=document.getElementById('qr-url-label');
+  if(lbl)lbl.textContent=joinUrl;
+  // Only build QR once — don't rebuild on every poll (causes flicker)
+  if(!_qrBuilt){buildQR(joinUrl);_qrBuilt=true;}
+  var valid=players.filter(function(p){return p&&p.name&&p.name!=='__reserving__'&&p.occupation;});
+  var countEl=document.getElementById('lobby-player-count');
+  if(countEl)countEl.textContent=valid.length?(valid.length+' 位玩家已登記'):'尚未有玩家登記';
+}
+function copyRegLink(){
+  var joinUrl=getJoinUrl();
+  var badge=document.getElementById('reg-copy-badge');
+  function done(){
+    if(badge){badge.textContent='連結已複製 ✓';badge.style.color='var(--green)';
+      setTimeout(function(){badge.textContent='';badge.style.color='var(--text-dim)';},2000);}
+  }
+  if(navigator.clipboard){navigator.clipboard.writeText(joinUrl).then(done).catch(function(){fbCopy(joinUrl,done);});}
+  else{fbCopy(joinUrl,done);}
+}
+function fbCopy(text,cb){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');if(cb)cb();}catch(e){}
+  document.body.removeChild(ta);
+}
+
+function renderLobbyPlayerList(){
+  var el=document.getElementById('lobby-player-list');
+  if(!el)return;
+  var valid=players.filter(function(p){return p&&p.name&&p.name!=='__reserving__'&&p.occupation;});
+  if(!valid.length){el.innerHTML='<div style="color:var(--text-dim);font-family:DM Mono,monospace;font-size:13px;padding:12px 0">尚未有玩家登記</div>';return;}
+  var h='<table class="player-table"><thead><tr><th>#</th><th>姓名</th><th>職業</th><th>年收入</th><th>保險</th></tr></thead><tbody>';
+  valid.forEach(function(p,i){
+    h+='<tr><td><div class="player-badge">'+(i+1)+'</div></td><td>'+p.name+'</td><td><span class="tag">'+p.occupation+'</span></td>'
+      +'<td style="font-family:DM Mono,monospace;color:var(--gold)">$'+(p.annualIncome||0).toLocaleString()+'</td>'
+      +'<td style="font-family:DM Mono,monospace">'+(p.insurance>0?'Y':'N')+'</td></tr>';
+  });
+  el.innerHTML=h+'</tbody></table>';
+}
+
+function refreshQR(){
+  loadState();
+  renderLobbyQR();
+  renderLobbyPlayerList();
+}
+
+function lobbyStartGame(){
+  location.href=location.pathname+'?admin';
+}
+function adminLogin(){
+  var pw=document.getElementById('admin-pw-input');
+  var err=document.getElementById('admin-pw-error');
+  if(!pw)return;
+  if(pw.value==='Matrix'){
+    location.href=location.pathname+'?admin';
+  } else {
+    if(err){err.style.display='block';}
+    pw.style.borderColor='var(--red)';
+    pw.value='';
+    setTimeout(function(){if(err)err.style.display='none';pw.style.borderColor='var(--border)';},2000);
+  }
+}
+
+// ── PLAYER SELF-REGISTRATION ──────────────────────────────────────────
+window._regInsuranceY=true;
+function setRegInsurance(isY){
+  window._regInsuranceY=isY;
+  var btnY=document.getElementById('reg-ins-y');
+  var btnN=document.getElementById('reg-ins-n');
+  if(!btnY||!btnN)return;
+  if(isY){
+    btnY.style.background='var(--gold)';btnY.style.color='#000';btnY.style.borderColor='var(--gold)';
+    btnN.style.background='var(--panel2)';btnN.style.color='var(--text-dim)';btnN.style.borderColor='var(--border)';
+  } else {
+    btnN.style.background='var(--gold)';btnN.style.color='#000';btnN.style.borderColor='var(--gold)';
+    btnY.style.background='var(--panel2)';btnY.style.color='var(--text-dim)';btnY.style.borderColor='var(--border)';
+  }
+}
+function regAutoFill(){
+  var sel=document.getElementById('reg-occ').value;
+  if(!sel){['reg-salary','reg-annual','reg-initial'].forEach(function(id){document.getElementById(id).value='';});return;}
+  var[,salary,initial]=sel.split('|');
+  document.getElementById('reg-salary').value=salary;
+  document.getElementById('reg-annual').value=parseInt(salary)*12;
+  document.getElementById('reg-initial').value=initial;
+}
+function submitPlayerRegistration(){
+  var name=document.getElementById('reg-name').value.trim();
+  var occ=document.getElementById('reg-occ').value;
+  if(!name){toast('請輸入姓名','error');return;}
+  if(!occ){toast('請選擇職業','error');return;}
+  var[occName,salary,initial]=occ.split('|');
+  var insurance=window._regInsuranceY!==false?30000:0;
+  var living=150000;
+
+  // ── Atomic slot reservation ──────────────────────────────────────────
+  // Load the very latest state first to minimise race window
+  loadState();
+
+  var idx;
+  if(!IS_JOIN){
+    // ?player=N — fixed assigned slot
+    idx=MY_PLAYER_IDX;
+  } else {
+    // ?join=1 — find next EMPTY slot (no name set)
+    // An empty slot has name==='' or the entry doesn't exist
+    idx=0;
+    while(idx<20){
+      var p=players[idx];
+      if(!p||!p.name)break; // empty slot found
+      idx++;
+    }
+    if(idx>=20){toast('玩家名額已滿（最多20位）','error');return;}
+    // Slot found - proceed (Firebase handles concurrent writes via server timestamp)
+  }
+
+  // Re-load latest state before writing to minimise conflicts
+
+  while(players.length<=idx)players.push({name:'',occupation:'',salary:0,annualIncome:0,initialAsset:0,insurance:30000,living:150000,holdings:{},cashHistory:[],cash:0,totalAssets:0});
+  while(roundData.length<=idx)roundData.push(Array.from({length:10},function(){ return emptyRoundData(); }));
+
+  players[idx]={name,occupation:occName,salary:parseInt(salary),annualIncome:parseInt(salary)*12,
+    initialAsset:parseInt(initial),insurance,living,
+    holdings:{},cashHistory:[],cash:parseInt(initial),totalAssets:parseInt(initial)};
+  roundData[idx]=Array.from({length:10},function(){ return emptyRoundData(); });
+
+  // For ?join: update URL to ?player=N for correct polling
+  if(IS_JOIN){
+    window.history.replaceState({},'',location.pathname+'?player='+idx);
+    window.__PLAYER_IDX_ACTUAL=idx;
+  }
+  saveState();
+
+  // Show done state
+  document.getElementById('player-reg-content').style.display='none';
+  document.getElementById('player-reg-done').style.display='block';
+  document.getElementById('reg-done-name').textContent=name;
+
+  // Poll for game start
+  // Determine which player index to use for gameplay
+  var myIdx=IS_JOIN?(window.__PLAYER_IDX_ACTUAL!=null?window.__PLAYER_IDX_ACTUAL:idx):MY_PLAYER_IDX;
+
+  var poller=setInterval(function(){
+    loadState();
+    var status=document.getElementById('reg-waiting-status');
+    if(status)status.textContent=((players.filter(function(p){ return p&&p.name; }).length)+' 位玩家已登記 · 等待開始…');
+    var started=roundData.some(function(rd){ return rd&&rd[0]&&rd[0]._done; })||currentRound>1;
+    if(started){
+      clearInterval(poller);
+      // Update globals so gameplay uses correct player idx
+      if(typeof MY_PLAYER_IDX==='undefined'||MY_PLAYER_IDX===null){
+        window.MY_PLAYER_IDX_OVERRIDE=myIdx;
+      }
+      document.getElementById('phase-player-register').style.display='none';
+      ['phase-setup','phase-lobby'].forEach(function(id){
+        var el=document.getElementById(id);if(el){el.style.display='none';el.classList.remove('active');}
+      });
+      var gp=document.getElementById('phase-gameplay');
+      if(gp){gp.style.removeProperty('display');gp.classList.add('active');}
+      currentPlayerIdx=myIdx;
+      renderGameplay();
+    }
+  },2500);
+}
+
+// ── HEADER ROLE BADGE & NAV VISIBILITY ────────────────────────────────
+function applyRoleUI(){
+  // Player view: hide phase nav except gameplay button
+  if(IS_PLAYER){
+    document.querySelectorAll('.phase-btn').forEach(function(b){b.style.display='none';});
+    // Show only a minimal header
+    var hdr=document.querySelector('.phase-indicator');
+    if(hdr)hdr.innerHTML=('<span style="font-family:&quot;DM Mono&quot;;font-size:11px;color:var(--text-dim);padding:6px 12px">\\n      玩家 '+((MY_PLAYER_IDX+1))+' · '+(players[MY_PLAYER_IDX]?players[MY_PLAYER_IDX].name:'')+'\\n    </span>');
+  }
+  // Also hide "← 玩家設定" and "排行榜 →" buttons in gameplay for players
+  if(IS_PLAYER){
+    document.querySelectorAll('[onclick*="setup"],[onclick*="leaderboard"]').forEach(function(b){
+      if(b.tagName==='BUTTON')b.style.display='none';
+    });
+  }
+}
+
+// Initialise based on URL role
+initByRole();
+applyRoleUI();
+</script>
+</body>
+</html>
