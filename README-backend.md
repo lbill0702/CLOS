@@ -16,6 +16,7 @@ Set these in Netlify project settings:
 FIREBASE_PROJECT_ID=your-project-id
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-...@your-project.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+ADMIN_PASSCODE=choose-a-private-admin-passcode
 ```
 
 Use a Firebase service account key from Firebase Console > Project settings > Service accounts.
@@ -28,6 +29,16 @@ npm run dev
 ```
 
 Netlify Dev will serve the static game and functions together. Ultimate also works offline from local wrong-answer history if Firebase is not configured.
+
+## Admin Report
+
+The in-game **Admin Report** button opens a passcode screen. On Netlify it calls `/.netlify/functions/admin-report` and returns:
+
+- Correct patterns
+- Incorrect patterns
+- Areas of improvement by learning zone
+
+The passcode is checked against `ADMIN_PASSCODE` in Netlify environment variables.
 
 ## GitHub Pages vs Netlify
 

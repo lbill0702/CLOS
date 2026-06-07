@@ -261,6 +261,7 @@ const DIFF_LABELS={B:'Beginner',A:'Advanced',E:'Expert',U:'Ultimate'};
 const SAVE_KEY='hkdd_v5';
 const PLAYER_KEY='hkdd_player_v1';
 const WRONG_HISTORY_KEY='hkdd_wrong_history_v1';
+const ADMIN_SESSION_KEY='hkdd_admin_session_v1';
 const API_BASE=(typeof window!=='undefined'&&window.HKDD_API_BASE)||'/.netlify/functions';
 const LEVELS_B=[
 /* Zone 0: Measurement Lab */
@@ -890,14 +891,18 @@ const LEVELS_E=[
  teach:{graphic:'place_table',steps:["6039−594=<strong>5 445</strong>"],formula:"6 039 − 594 = 5 445"}},
 ];
 function getBaseLevels(d){return d==="B"?LEVELS_B:d==="A"?LEVELS_A:LEVELS_E;}
-function getLevels(d){return d==="U"?(S.ultimateLevels&&S.ultimateLevels.length?S.ultimateLevels:buildLocalUltimateLevels()):getBaseLevels(d);}
+function getLevels(d){
+  const raw=d==="U"?(S.ultimateLevels&&S.ultimateLevels.length?S.ultimateLevels:buildLocalUltimateLevels()):getBaseLevels(d);
+  return getSessionLevels(d,raw);
+}
 
 /* ══ STATE ══ */
 let S={
   screen:'welcome', diff:'A', level:0, score:0,
   chosen:null, wrongCount:0, hp:100, xp:0,
   earnedBadges:[], enemyHp:100,
-  playerId:null, ultimateLevels:[],
+  playerId:null, ultimateLevels:[], sessionSeed:'',
+  levelVariants:{},
   zoneAnswers:[], completedZoneId:0,
   dialogueText:'', dialogueFull:'',
   enemyAnim:'idle', playerAnim:'',
@@ -915,6 +920,7 @@ let S={
       S.score=s.score||0;
       S.earnedBadges=Array.isArray(s.badges)?s.badges:[];
       S.xp=s.xp||0;
+      S.sessionSeed=s.sessionSeed||'';
     } else {
       // Corrupted or foreign data — clear it
       localStorage.removeItem(SAVE_KEY);
@@ -923,7 +929,7 @@ let S={
 })();
 
 function save(){
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify({game:'hkdd',diff:S.diff,level:S.level,score:S.score,badges:S.earnedBadges,xp:S.xp}));}catch(e){}
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify({game:'hkdd',diff:S.diff,level:S.level,score:S.score,badges:S.earnedBadges,xp:S.xp,sessionSeed:S.sessionSeed}));}catch(e){}
 }
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}; try{delete localStorage[SAVE_KEY];}catch(e){}}
 
@@ -947,6 +953,53 @@ function apiPost(path,payload){
   return fetch(API_BASE+'/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(function(r){return r.ok?r.json():null;})
     .catch(function(){return null;});
+}
+function makeSessionSeed(){
+  return Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9);
+}
+function ensureSessionSeed(){
+  if(!S.sessionSeed)S.sessionSeed=makeSessionSeed();
+  return S.sessionSeed;
+}
+function seededNumber(str){
+  var h=2166136261;
+  for(var i=0;i<str.length;i++){
+    h^=str.charCodeAt(i);
+    h=Math.imul(h,16777619);
+  }
+  return (h>>>0)/4294967296;
+}
+function seededShuffle(arr,key){
+  var out=arr.slice();
+  for(var i=out.length-1;i>0;i--){
+    var j=Math.floor(seededNumber(key+':'+i)*(i+1));
+    var t=out[i];out[i]=out[j];out[j]=t;
+  }
+  return out;
+}
+function variantQuestionText(q,key){
+  var labels=['Case file','Detective log','Data clue','Mission note'];
+  var label=labels[Math.floor(seededNumber(key+':label')*labels.length)];
+  return label+': '+q;
+}
+function variantLevel(lv,diff,idx){
+  var copy=JSON.parse(JSON.stringify(lv));
+  copy.sourceDiff=copy.sourceDiff||diff;
+  copy.sourceLevel=Number.isInteger(copy.sourceLevel)?copy.sourceLevel:idx;
+  var key=ensureSessionSeed()+':'+diff+':'+idx;
+  var correctText=copy.opts[copy.ans];
+  copy.opts=seededShuffle(copy.opts,key+':opts');
+  copy.ans=copy.opts.indexOf(correctText);
+  copy.q=variantQuestionText(copy.q,key);
+  return copy;
+}
+function getSessionLevels(diff,rawLevels){
+  ensureSessionSeed();
+  var key=diff+':'+S.sessionSeed+':'+rawLevels.length;
+  if(!S.levelVariants[key]){
+    S.levelVariants[key]=rawLevels.map(function(lv,i){return variantLevel(lv,diff,i);});
+  }
+  return S.levelVariants[key];
 }
 function readWrongHistory(){
   try{return JSON.parse(localStorage.getItem(WRONG_HISTORY_KEY)||'[]')||[];}catch(e){return[];}
@@ -1028,6 +1081,46 @@ function recordAttempt(lv,correct,yourAns){
   var payload=makeAttemptPayload(lv,correct,yourAns);
   rememberAttempt(payload);
   apiPost('record-attempt',payload);
+}
+function getZoneLabel(zid){
+  var z=ZONES[zid]||ZONES[0];
+  return z.emoji+' '+z.name;
+}
+function localReport(){
+  var hist=readWrongHistory();
+  var byZone={};
+  hist.forEach(function(h){
+    var z=byZone[h.zone]||(byZone[h.zone]={zone:h.zone,total:0,wrong:0,items:[]});
+    z.total+=h.totalCount||0;
+    z.wrong+=h.wrongCount||0;
+    z.items.push(h);
+  });
+  var zones=Object.keys(byZone).map(function(k){return byZone[k];});
+  zones.sort(function(a,b){return (b.total?b.wrong/b.total:0)-(a.total?a.wrong/a.total:0);});
+  var correctPatterns=hist.filter(function(h){return (h.totalCount||0)>0&&(h.wrongCount||0)===0;})
+    .sort(function(a,b){return (b.totalCount||0)-(a.totalCount||0);}).slice(0,8);
+  var incorrectPatterns=hist.filter(function(h){return (h.wrongCount||0)>0;})
+    .sort(function(a,b){return (b.wrongCount||0)-(a.wrongCount||0);}).slice(0,8);
+  var improvements=zones.slice(0,5).map(function(z){
+    return{zone:z.zone,label:getZoneLabel(z.zone),wrong:z.wrong,total:z.total,rate:z.total?Math.round(z.wrong/z.total*100):0};
+  });
+  return{correctPatterns:correctPatterns,incorrectPatterns:incorrectPatterns,areasOfImprovement:improvements,source:'local'};
+}
+function adminReport(passcode){
+  if(apiReady()){
+    return fetch(API_BASE+'/admin-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({passcode:passcode})})
+      .then(function(r){return r.json().catch(function(){return{};});})
+      .then(function(res){
+        if(res&&res.error&&/Firebase environment variables/i.test(res.error)){
+          var fallback=localReport();
+          fallback.setupNote="Firebase is not configured yet; showing this browser's local practice data.";
+          return fallback;
+        }
+        return res;
+      })
+      .catch(function(){return localReport();});
+  }
+  return Promise.resolve(localReport());
 }
 
 /* ══ HELPERS ══ */
@@ -1616,7 +1709,7 @@ function renderWelcome(){
     const resumeBtn=ce('button',{class:'btn btn-green',onclick:()=>renderMap()},'▶ Resume Journey');
     card.appendChild(resumeBtn);
     const resetBtn=ce('button',{class:'btn btn-red',onclick:()=>{
-      clearSave();S.level=0;S.score=0;S.earnedBadges=[];S.xp=0;
+      clearSave();S.level=0;S.score=0;S.earnedBadges=[];S.xp=0;S.sessionSeed='';S.levelVariants={};
       renderSelectDiff();
     }},'🔄 Reset & Choose Difficulty');
     card.appendChild(resetBtn);
@@ -1624,9 +1717,114 @@ function renderWelcome(){
     card.appendChild(ce('div',{class:'no-save'},'No saved game found'));
     card.appendChild(ce('button',{class:'btn btn-blue',onclick:()=>renderSelectDiff()},'⚔️ Start New Game'));
   }
+  card.appendChild(ce('button',{class:'btn btn-ghost',onclick:()=>renderAdminLogin()},'📊 Admin Report'));
   card.appendChild(ce('div',{class:'autosave-note'},'💾 Auto-saves · Persists after closing'));
   wrap.appendChild(card);
   root.appendChild(wrap);
+}
+
+function renderAdminLogin(){
+  const root=el('root');root.innerHTML='';
+  const wrap=ce('div',{class:'screen active'});
+  const card=ce('div',{class:'welcome-card'});
+  card.appendChild(ce('div',{class:'welcome-logo'},'📊 Admin Login'));
+  card.appendChild(ce('div',{class:'welcome-sub'},'Learning analysis'));
+  const input=ce('input',{type:'password',placeholder:'Admin passcode',style:{width:'100%',padding:'13px',borderRadius:'12px',border:'2px solid rgba(255,215,0,.25)',background:'rgba(255,255,255,.08)',color:'#fff',fontSize:'14px',fontWeight:800,outline:'none',margin:'10px 0 6px'}});
+  card.appendChild(input);
+  const note=ce('div',{class:'no-save'},apiReady()?'Enter the Netlify admin passcode.':'Local file mode shows local practice data.');
+  card.appendChild(note);
+  const open=ce('button',{class:'btn btn-blue',onclick:function(){
+    const pass=input.value||'';
+    if(apiReady()&&!pass){note.textContent='Please enter the admin passcode.';return;}
+    try{sessionStorage.setItem(ADMIN_SESSION_KEY,pass);}catch(e){}
+    renderAdminReport(pass);
+  }},'Open Report');
+  card.appendChild(open);
+  card.appendChild(ce('button',{class:'btn btn-ghost',onclick:()=>renderWelcome()},'← Back'));
+  wrap.appendChild(card);root.appendChild(wrap);
+  setTimeout(function(){try{input.focus();}catch(e){}},50);
+}
+
+function reportItemText(item){
+  var levels=getBaseLevels(item.sourceDiff||item.diff);
+  var lv=levels&&levels[item.sourceLevel];
+  var q=lv?lv.q:(item.question||'Question');
+  return (DIFF_LABELS[item.sourceDiff]||item.sourceDiff||'')+' L'+((Number(item.sourceLevel)||0)+1)+' · '+q;
+}
+
+function renderPatternList(title,items,emptyText,accent){
+  const box=ce('div',{class:'zc-summary',style:{borderColor:accent+'55',background:accent+'12'}});
+  box.appendChild(ce('div',{class:'zc-sum-title',style:{color:accent}},title));
+  if(!items||!items.length){
+    box.appendChild(ce('div',{class:'zc-sum-txt'},emptyText));
+    return box;
+  }
+  items.slice(0,8).forEach(function(item){
+    const row=ce('div',{class:'zc-wrong-item',style:{background:'rgba(255,255,255,.05)'}});
+    row.appendChild(ce('div',{class:'zc-q'},reportItemText(item)));
+    const ans=ce('div',{class:'zc-ans'});
+    ans.appendChild(ce('span',{class:'zc-correct'},'Correct: '+Math.max(0,(item.totalCount||0)-(item.wrongCount||0))));
+    ans.appendChild(ce('span',{class:'zc-your'},'Incorrect: '+(item.wrongCount||0)));
+    row.appendChild(ans);
+    box.appendChild(row);
+  });
+  return box;
+}
+
+function renderImprovementList(items){
+  const box=ce('div',{class:'zc-wrong-box'});
+  box.appendChild(ce('div',{class:'zc-wrong-title'},'Area of Improvement'));
+  if(!items||!items.length){
+    box.appendChild(ce('div',{class:'zc-q'},'No weak area yet. Play a few rounds to build the report.'));
+    return box;
+  }
+  items.forEach(function(item){
+    const row=ce('div',{class:'zc-wrong-item'});
+    row.appendChild(ce('div',{class:'zc-q'},item.label||getZoneLabel(item.zone)));
+    const ans=ce('div',{class:'zc-ans'});
+    ans.appendChild(ce('span',{class:'zc-your'},'Wrong rate: '+(item.rate||0)+'%'));
+    ans.appendChild(ce('span',{class:'zc-correct'},(item.wrong||0)+' / '+(item.total||0)+' attempts'));
+    row.appendChild(ans);
+    box.appendChild(row);
+  });
+  return box;
+}
+
+function renderAdminReport(passcode){
+  const root=el('root');root.innerHTML='';
+  const wrap=ce('div',{class:'screen active',style:{padding:'10px 0'}});
+  const card=ce('div',{class:'zc-card'});
+  card.appendChild(ce('div',{class:'zc-title'},'📊 Admin Analysis'));
+  card.appendChild(ce('div',{class:'zc-sub'},'Correct patterns · Incorrect patterns · Improvement areas'));
+  const loading=ce('div',{class:'zc-summary'});
+  loading.appendChild(ce('div',{class:'zc-sum-txt'},'Loading report...'));
+  card.appendChild(loading);
+  card.appendChild(ce('button',{class:'zc-btn zc-map',onclick:()=>renderWelcome()},'← Back'));
+  wrap.appendChild(card);root.appendChild(wrap);
+  adminReport(passcode).then(function(report){
+    card.removeChild(loading);
+    if(report&&report.error){
+      const err=ce('div',{class:'zc-wrong-box'});
+      err.appendChild(ce('div',{class:'zc-wrong-title'},'Login Failed'));
+      err.appendChild(ce('div',{class:'zc-q'},report.error));
+      card.insertBefore(err,card.lastChild);
+      return;
+    }
+    if(report&&report.setupNote){
+      const note=ce('div',{class:'zc-summary'});
+      note.appendChild(ce('div',{class:'zc-sum-txt'},report.setupNote));
+      card.insertBefore(note,card.lastChild);
+    }
+    card.insertBefore(renderPatternList('A) Correct Pattern',report.correctPatterns,'No consistently correct pattern yet.','#22c065'),card.lastChild);
+    card.insertBefore(renderPatternList('B) Incorrect Pattern',report.incorrectPatterns,'No incorrect pattern recorded yet.','#e8455a'),card.lastChild);
+    card.insertBefore(renderImprovementList(report.areasOfImprovement),card.lastChild);
+  }).catch(function(){
+    card.removeChild(loading);
+    const fallback=localReport();
+    card.insertBefore(renderPatternList('A) Correct Pattern',fallback.correctPatterns,'No consistently correct pattern yet.','#22c065'),card.lastChild);
+    card.insertBefore(renderPatternList('B) Incorrect Pattern',fallback.incorrectPatterns,'No incorrect pattern recorded yet.','#e8455a'),card.lastChild);
+    card.insertBefore(renderImprovementList(fallback.areasOfImprovement),card.lastChild);
+  });
 }
 
 function renderSelectDiff(){
@@ -1665,6 +1863,7 @@ function renderSelectDiff(){
 
 function startSelectedDifficulty(btn){
   function begin(){
+    S.sessionSeed=makeSessionSeed();S.levelVariants={};
     S.level=0;S.score=0;S.earnedBadges=[];S.zoneAnswers=[];save();renderMap();
   }
   if(S.diff!=='U'){begin();return;}
