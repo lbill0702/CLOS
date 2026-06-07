@@ -1,0 +1,16 @@
+{
+  "name": "hk-data-detective",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "serve": "netlify dev",
+    "build": "echo \"Static site ready\""
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.38.1"
+  }
+}

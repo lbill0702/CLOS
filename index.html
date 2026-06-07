@@ -256,9 +256,12 @@ const BADGES=[
 ];
 const WILD=['🐛','🦆','⚡','🔮','🦕','🌊','🔥'];
 const TYPE_COLORS={Grass:'#5a9e3a',Water:'#3a7fc8',Electric:'#c8a800',Psychic:'#9848c0',Rock:'#9a8048',Fire:'#d04818'};
-const DIFF_COLORS={B:'#3daa6e',A:'#4a8fdf',E:'#e8455a'};
-const DIFF_LABELS={B:'Beginner',A:'Advanced',E:'Expert'};
+const DIFF_COLORS={B:'#3daa6e',A:'#4a8fdf',E:'#e8455a',U:'#c87a00'};
+const DIFF_LABELS={B:'Beginner',A:'Advanced',E:'Expert',U:'Ultimate'};
 const SAVE_KEY='hkdd_v5';
+const PLAYER_KEY='hkdd_player_v1';
+const WRONG_HISTORY_KEY='hkdd_wrong_history_v1';
+const API_BASE=(typeof window!=='undefined'&&window.HKDD_API_BASE)||'/.netlify/functions';
 const LEVELS_B=[
 /* Zone 0: Measurement Lab */
 {z:0,q:"A har gow weighs 18 g. How many grams is that?",viz:{t:'scale',d:{a:"18 g",b:"? g"}},opts:["8 g","18 g","28 g","81 g"],ans:1,hint:"Read the scale directly.",
@@ -403,8 +406,8 @@ const LEVELS_B=[
  teach:{graphic:'triangle_angles',text:"9+9+6=<strong>24 cm</strong>.",formula:"9 + 9 + 6 = 24 cm"}},
 {z:4,q:"One angle is 120°. Acute, right or obtuse?",viz:{t:'triangle',d:{type:'obtuse',angles:['120°','?','?']}},opts:["Acute","Right","Obtuse","Equilateral"],ans:2,hint:"120°>90°",
  teach:{graphic:'triangle_angles',text:"120° > 90° → <strong>obtuse</strong>.",formula:"one angle > 90° = obtuse"}},
-{z:4,q:"2 triangles, each P=24. Shared side=12. Outer perimeter?",viz:null,opts:["24 cm","28 cm","36 cm","48 cm"],ans:0,hint:"Each triangle: a+b+12=24, so a+b=12. Outer=2×(a+b)=?",
- teach:{graphic:'triangle_right',steps:["Each: 24−14=14... 2×(24−12)=<strong>28</strong>"],formula:"2×(24−12)=28 cm"}},
+{z:4,q:"2 triangles, each P=24. Shared side=10. Outer perimeter?",viz:null,opts:["24","28","42","56"],ans:1,hint:"2×(24−10)=?",
+ teach:{graphic:'triangle_right',steps:["Each triangle's outer sides: 24−10=<strong>14</strong>","Outer perimeter: 2×14=<strong>28</strong>"],formula:"2×(24−10)=28 cm"}},
 {z:4,q:"Equilateral P=27. Each side?",viz:{t:'triangle',d:{type:'equilateral',sides:['?','?','?']}},opts:["3","9","27","81"],ans:1,hint:"27÷3=?",
  teach:{graphic:'triangle_angles',steps:["27÷3=<strong>9 cm</strong>"],formula:"27 ÷ 3 = 9 cm"}},
 {z:4,q:"Base angles both 55°. Vertex angle?",viz:{t:'triangle',d:{type:'isosceles',angles:['55°','?','55°']}},opts:["55°","60°","70°","110°"],ans:2,hint:"180−55−55=?",
@@ -484,7 +487,7 @@ const LEVELS_A=[
  teach:{graphic:'unit_mm',steps:["4 × 12 = <strong>48 cm</strong>","48 cm × 10 = <strong>480 mm</strong>"],formula:"48 cm × 10 = 480 mm"}},
 {z:0,q:"A restaurant serves soup in 350 mL bowls. They fill 6 bowls from one pot. How many litres of soup did the pot hold?",viz:{t:'container',d:{items:[{label:'Pot',fill:2100,cap:3000,show:'? L',color:'#ff6b35'}]}},opts:["2 L","2 L 100 mL","3 L 600 mL","21 L"],ans:1,hint:"6 × 350 = 2 100 mL. Convert.",
  teach:{graphic:'unit_ml',steps:["6 × 350 = <strong>2 100 mL</strong>","2 100 ÷ 1 000 = 2 remainder 100","= <strong>2 L 100 mL</strong>"],formula:"2 100 mL = 2 L 100 mL"}},
-{z:0,q:"MTR Central to Admiralty is 900 m. Central to Tsim Sha Tsui via ferry is 1.2 km. How much further is the ferry route?",viz:null,opts:["0.3 km","300 m","Both same","30 m"],ans:1,hint:"1.2 km = 1 200 m. 1 200 − 900 = ?",
+{z:0,q:"MTR Central to Admiralty is 900 m. Central to Tsim Sha Tsui via ferry is 1.2 km. How much further is the ferry route?",viz:null,opts:["0.03 km","300 m","3 000 m","30 m"],ans:1,hint:"1.2 km = 1 200 m. 1 200 − 900 = ?",
  teach:{graphic:'unit_km',steps:["1.2 km = <strong>1 200 m</strong>","1 200 − 900 = <strong>300 m</strong> further"],formula:"1 200 − 900 = 300 m"}},
 {z:0,q:"Three milk cartons hold 236 mL, 355 mL and 473 mL. Do they together exceed 1 L?",viz:null,opts:["Yes, by 64 mL","Yes, by 164 mL","No, 936 mL total","No, 964 mL total"],ans:0,hint:"236+355+473=1 064. 1 064−1 000=?",
  teach:{graphic:'unit_ml',steps:["236+355 = 591, 591+473 = <strong>1 064 mL</strong>","1 064 > 1 000 mL, so YES","Exceeds by 1 064−1 000 = <strong>64 mL</strong>"],formula:"1 064 − 1 000 = 64 mL over"}},
@@ -492,16 +495,16 @@ const LEVELS_A=[
  teach:{graphic:'unit_g',steps:["5 × 350 = <strong>1 750 g</strong>","2 × 1.2 kg = 2 × 1 200 g = <strong>2 400 g</strong>","Total: 1 750 + 2 400 = <strong>4 150 g</strong>"],formula:"1 750 + 2 400 = 4 150 g"}},
 {z:0,q:"A MTR platform is 165 m. A train of 8 cars is 176 m long. By how many cm does it overhang?",viz:null,opts:["11 cm","110 cm","1 100 cm","11 m"],ans:2,hint:"176−165=11 m = ? cm",
  teach:{graphic:'unit_km',steps:["Overhang: 176 − 165 = <strong>11 m</strong>","11 m × 100 = <strong>1 100 cm</strong>"],formula:"11 m × 100 = 1 100 cm"}},
-{z:0,q:"A water bottle (28 cm) and thermos (35 cm) stand side by side on a 70 cm shelf. How much shelf space is left in mm?",viz:null,opts:["7 mm","70 mm","700 mm","7 cm"],ans:2,hint:"70−28−35=7 cm. Convert to mm.",
- teach:{graphic:'unit_mm',steps:["Left: 70−28−35 = <strong>7 cm</strong>","7 × 10 = <strong>70 mm</strong>... wait!","7 cm × 10 = <strong>70 mm</strong>"],formula:"7 cm × 10 = 70 mm"}},
+{z:0,q:"A water bottle (28 cm) and thermos (35 cm) stand side by side on a 70 cm shelf. How much shelf space is left in mm?",viz:null,opts:["7 mm","70 mm","700 mm","7 cm"],ans:1,hint:"70−28−35=7 cm. Convert to mm.",
+ teach:{graphic:'unit_mm',steps:["Left: 70−28−35 = <strong>7 cm</strong>","7 cm × 10 = <strong>70 mm</strong>"],formula:"7 cm × 10 = 70 mm"}},
 {z:0,q:"A typhoon causes 120 mm of rain in 3 hours. If rainfall is even, how many cm fall in 1 hour?",viz:null,opts:["4 cm","40 cm","400 mm","40 mm"],ans:0,hint:"120 ÷ 3 = 40 mm per hour = 4 cm",
  teach:{graphic:'unit_mm',steps:["120 ÷ 3 = <strong>40 mm</strong> per hour","40 mm ÷ 10 = <strong>4 cm</strong>"],formula:"120÷3=40 mm = 4 cm per hour"}},
 {z:0,q:"3 pineapple buns (95 g each) + 2 coconut tarts (65 g each). Change from $50 spent only on buns at $8 each?",viz:{t:'scale',d:{a:"3×95g",b:"2×65g"}},opts:["$26","$26 (weight: 415g)","$18","$50"],ans:0,hint:"3 buns × $8 = $24. Change = $50 − $24.",
  teach:{graphic:'unit_g',steps:["Cost: 3 × $8 = <strong>$24</strong>","Change: $50 − $24 = <strong>$26</strong>","(Weight = 3×95+2×65=415 g, but question asks about money)"],formula:"$50 − $24 = $26 change"}},
 {z:0,q:"A fish tank holds 24 L. It is 3/4 full. How many mL of water is in it?",viz:null,opts:["6 000 mL","9 000 mL","18 000 mL","24 000 mL"],ans:2,hint:"3/4 of 24 = 18 L. × 1 000.",
  teach:{graphic:'unit_ml',steps:["3/4 of 24 = 3×24÷4 = <strong>18 L</strong>","18 × 1 000 = <strong>18 000 mL</strong>"],formula:"18 L × 1 000 = 18 000 mL"}},
-{z:0,q:"A Sai Kung trail is 4.5 km. A hiker walks it twice then rests 500 m from the start. Total distance hiked?",viz:null,opts:["9 km","9.5 km","9 500 m","Both B and C"],ans:3,hint:"4.5×2=9 km + 0.5 km = 9.5 km = 9 500 m",
- teach:{graphic:'unit_km',steps:["4.5 × 2 = <strong>9 km</strong>","9 + 0.5 = <strong>9.5 km</strong>","9.5 × 1 000 = <strong>9 500 m</strong> — same answer!"],formula:"9.5 km = 9 500 m"}},
+{z:0,q:"A Sai Kung trail is 4.5 km. A hiker walks it twice then rests after another 500 m. Total distance hiked in km?",viz:null,opts:["9 km","9.5 km","9 500 km","10 km"],ans:1,hint:"4.5×2=9 km + 0.5 km = ?",
+ teach:{graphic:'unit_km',steps:["4.5 × 2 = <strong>9 km</strong>","500 m = <strong>0.5 km</strong>","9 + 0.5 = <strong>9.5 km</strong>"],formula:"9 km + 0.5 km = 9.5 km"}},
 /* Zone 1: Pictograph Park (16-29) */
 {z:1,q:"Each 🍜 = 5 bowls. Wed had twice as many as Mon's 15. How many MORE bowls on Wed than Tue's 20?",viz:{t:'picto',d:{items:[{label:'Mon',v:15},{label:'Tue',v:20},{label:'Wed',v:30},{label:'Thu',v:10}],iconVal:5,icon:'🍜',unit:'bowls'}},opts:["5","10","15","30"],ans:1,hint:"Wed=2×15=30. 30−20=?",
  teach:{graphic:'pictograph',steps:["Wed = 2 × 15 = <strong>30 bowls</strong>","Tue = <strong>20 bowls</strong>","More on Wed: 30 − 20 = <strong>10</strong>"],formula:"30 − 20 = 10 more bowls"}},
@@ -527,34 +530,34 @@ const LEVELS_A=[
  teach:{graphic:'pictograph',steps:["3 icons × 5 = <strong>15 prawns per dish</strong>","4 dishes: 15 × 4 = <strong>60 prawns</strong>"],formula:"3 × 5 × 4 = 60 prawns"}},
 {z:1,q:"Each 🌸 = 4 flowers. Mei buys 2 rows of 7 icons. How many flowers and what is the cost if each flower is $3?",viz:null,opts:["28 flowers / $84","56 flowers / $168","56 flowers / $84","28 flowers / $112"],ans:1,hint:"2×7=14 icons. 14×4=56 flowers. 56×$3=?",
  teach:{graphic:'pictograph',steps:["Icons: 2×7 = <strong>14</strong>","Flowers: 14×4 = <strong>56</strong>","Cost: 56×$3 = <strong>$168</strong>"],formula:"56 flowers × $3 = $168"}},
-{z:1,q:"Each ☕ = 2 milk teas. Wed had 18 cups. Thu had 50% more than Wed. How many more icons for Thu than Wed?",viz:null,opts:["3","5","9","27"],ans:0,hint:"Wed icons=9. Thu=18×1.5=27 cups=13.5 icons≈... Hmm: Thu=27, icons=27/2=13.5. More icons=4.5→nearest whole=not possible. Re-check: Wed=18/2=9 icons. Thu=27/2=13.5. Diff=4.5. Use 3.",
- teach:{graphic:'pictograph',steps:["Wed: 18 cups ÷ 2 = <strong>9 icons</strong>","Thu: 18 × 1.5 = 27 cups ÷ 2 = 13.5 → <strong>13 full icons + 1 half</strong>","More icons: 13−9 = <strong>4 full + half</strong> → approximately <strong>4 more whole icons + ½</strong>"],formula:"Thu=27 cups = 13½ icons; Wed=9 icons; diff ≈ 4½"}},
+{z:1,q:"Each ☕ = 2 milk teas. Wed had 18 cups. Thu had 10 more cups than Wed. How many more icons for Thu than Wed?",viz:null,opts:["3","5","9","27"],ans:1,hint:"10 more cups ÷ 2 cups per icon = ?",
+ teach:{graphic:'pictograph',steps:["Each icon = <strong>2 cups</strong>","Thu has 10 more cups","10 ÷ 2 = <strong>5 more icons</strong>"],formula:"10 cups ÷ 2 = 5 icons"}},
 {z:1,q:"Each 🐟 = 10 fish. Kai has 3½ icons. Mei has 2 fewer fish. How many fish does Mei have?",viz:null,opts:["15 fish","25 fish","35 fish","50 fish"],ans:1,hint:"3.5×10=35. 35−10=25.",
  teach:{graphic:'pictograph',steps:["Kai: 3½ × 10 = <strong>35 fish</strong>","Mei: 35 − 10 = <strong>25 fish</strong>"],formula:"35 − 10 = 25 fish"}},
 /* Zone 2: Bar Chart City (30-45) */
 {z:2,q:"Which MTR station had the biggest temperature RANGE if TST peaks at 32°C morning and 28°C evening?",viz:{t:'bar',d:{items:[{label:'HKU',v:29,color:'#e05555'},{label:'TST',v:32,color:'#ff8c00'},{label:'MK',v:31,color:'#4caf7d'},{label:'WC',v:27,color:'#5c9ee8'}],isH:false,unit:'°C',maxScale:40}},opts:["HKU","Tsim Sha Tsui (range 4°C)","Mong Kok","Wan Chai"],ans:1,hint:"TST: 32−28=4°C range",
  teach:{graphic:'bar_read',steps:["TST morning=32, evening=28","Range = 32−28 = <strong>4°C</strong>","A range = highest − lowest"],formula:"32 − 28 = 4°C range"}},
-{z:2,q:"Thursday's litres is what FRACTION of the total for the 5 days?",viz:{t:'bar',d:{items:[{label:'Mon',v:45,color:'#5c9ee8'},{label:'Tue',v:60,color:'#5c9ee8'},{label:'Wed',v:30,color:'#5c9ee8'},{label:'Thu',v:75,color:'#ff8c00'},{label:'Fri',v:50,color:'#5c9ee8'}],isH:false,unit:'Litres',maxScale:100}},opts:["1/4","3/10","3/14","1/3"],ans:1,hint:"Thu=75. Total=45+60+30+75+50=260. 75/260=?",
- teach:{graphic:'bar_read',steps:["Total: 45+60+30+75+50 = <strong>260 L</strong>","Thu fraction: 75/260 = <strong>15/52</strong>... hmm, simplify","GCD(75,260)=5 → 15/52. Closest option: <strong>3/10 ≈ 0.288 ≈ 75/260</strong>"],formula:"75/260 ≈ 3/10"}},
+{z:2,q:"Thursday's litres is what FRACTION of the total for the 5 days?",viz:{t:'bar',d:{items:[{label:'Mon',v:45,color:'#5c9ee8'},{label:'Tue',v:60,color:'#5c9ee8'},{label:'Wed',v:30,color:'#5c9ee8'},{label:'Thu',v:75,color:'#ff8c00'},{label:'Fri',v:50,color:'#5c9ee8'}],isH:false,unit:'Litres',maxScale:100}},opts:["1/4","3/10","15/52","1/3"],ans:2,hint:"Thu=75. Total=45+60+30+75+50=260. 75/260=?",
+ teach:{graphic:'bar_read',steps:["Total: 45+60+30+75+50 = <strong>260 L</strong>","Thu fraction: 75/260","Simplify by 5: <strong>15/52</strong>"],formula:"75/260 = 15/52"}},
 {z:2,q:"Egg waffles cost $18 each and fish balls $12 each. How much more revenue from egg waffles than fish balls?",viz:{t:'bar',d:{items:[{label:'Egg Waffles',v:24,color:'#ffd700'},{label:'Fish Balls',v:16,color:'#ff8c00'},{label:'Tofu',v:12,color:'#4caf7d'},{label:'Pineapple Bun',v:20,color:'#a855f7'}],isH:true,unit:'Students',maxScale:30}},opts:["$192","$216","$240","$624"],ans:2,hint:"Waffle rev=24×$18=432. FB rev=16×$12=192. 432−192=?",
  teach:{graphic:'bar_read',steps:["Waffles: 24×$18 = <strong>$432</strong>","Fish balls: 16×$12 = <strong>$192</strong>","Difference: 432−192 = <strong>$240</strong>"],formula:"$432 − $192 = $240 more"}},
 {z:2,q:"Sat+Sun dim sum total is how many times Friday's sales?",viz:{t:'bar',d:{items:[{label:'Fri',v:30,color:'#5c9ee8'},{label:'Sat',v:55,color:'#ff8c00'},{label:'Sun',v:65,color:'#e05555'}],isH:false,unit:'kg',maxScale:80}},opts:["2 times","4 times","120 kg","120/30 = 4 times"],ans:3,hint:"Sat+Sun=120. Fri=30. 120÷30=?",
  teach:{graphic:'bar_read',steps:["Sat+Sun = 55+65 = <strong>120 kg</strong>","Fri = <strong>30 kg</strong>","120 ÷ 30 = <strong>4 times</strong>"],formula:"120 ÷ 30 = 4 times Friday"}},
-{z:2,q:"If all 4 students topped up to the highest balance ($80), what total extra money was needed?",viz:{t:'bar',d:{items:[{label:'Amy',v:50,color:'#e05555'},{label:'Ben',v:80,color:'#5c9ee8'},{label:'Chloe',v:60,color:'#4caf7d'},{label:'David',v:30,color:'#a855f7'}],isH:false,unit:'$',maxScale:100}},opts:["$60","$70","$80","$90"],ans:1,hint:"Amy needs $30, Ben $0, Chloe $20, David $50. Total?",
- teach:{graphic:'bar_read',steps:["Amy: 80−50=30, Ben: 0, Chloe: 80−60=20, David: 80−30=50","Total extra: 30+0+20+50 = <strong>$100</strong>... wait, check: 30+20+50=<strong>$100</strong>","Hmm — re-check answer: 30+20+50=100, not 70. Confirm options."],formula:"30+0+20+50 = $100 extra needed"}},
+{z:2,q:"If all 4 students topped up to the highest balance ($80), what total extra money was needed?",viz:{t:'bar',d:{items:[{label:'Amy',v:50,color:'#e05555'},{label:'Ben',v:80,color:'#5c9ee8'},{label:'Chloe',v:60,color:'#4caf7d'},{label:'David',v:30,color:'#a855f7'}],isH:false,unit:'$',maxScale:100}},opts:["$60","$70","$80","$100"],ans:3,hint:"Amy needs $30, Ben $0, Chloe $20, David $50. Total?",
+ teach:{graphic:'bar_read',steps:["Amy: 80−50=30, Ben: 0, Chloe: 80−60=20, David: 80−30=50","Total extra: 30+0+20+50 = <strong>$100</strong>"],formula:"30+0+20+50 = $100 extra needed"}},
 {z:2,q:"Disneyland Tuesday visitors is what percentage of Monday visitors?",viz:{t:'bar',d:{items:[{label:'Mon',v:1200,color:'#5c9ee8'},{label:'Tue',v:1800,color:'#ff8c00'},{label:'Wed',v:1500,color:'#4caf7d'},{label:'Thu',v:900,color:'#a855f7'}],isH:false,unit:'Visitors',maxScale:2000}},opts:["50%","75%","150%","180%"],ans:2,hint:"1 800 ÷ 1 200 × 100% = ?",
  teach:{graphic:'bar_read',steps:["Tue = 1 800, Mon = 1 200","1 800 ÷ 1 200 = 1.5","= <strong>150%</strong> of Monday"],formula:"1 800/1 200 = 150%"}},
 {z:2,q:"Average daily visitors across the 4 days?",viz:{t:'bar',d:{items:[{label:'Mon',v:1200,color:'#5c9ee8'},{label:'Tue',v:1800,color:'#ff8c00'},{label:'Wed',v:1500,color:'#4caf7d'},{label:'Thu',v:900,color:'#a855f7'}],isH:false,unit:'Visitors',maxScale:2000}},opts:["900","1 350","1 400","1 500"],ans:1,hint:"(1200+1800+1500+900)÷4=?",
  teach:{graphic:'bar_read',steps:["Total: 1200+1800+1500+900 = <strong>5 400</strong>","Average: 5 400÷4 = <strong>1 350</strong>"],formula:"5 400 ÷ 4 = 1 350 avg visitors"}},
-{z:2,q:"Which single day of the week would need to be removed to make total rainfall exactly 80 mm?",viz:{t:'bar',d:{items:[{label:'Mon',v:10,color:'#5c9ee8'},{label:'Tue',v:25,color:'#5c9ee8'},{label:'Wed',v:40,color:'#5c9ee8'},{label:'Thu',v:15,color:'#5c9ee8'},{label:'Fri',v:10,color:'#5c9ee8'}],isH:false,unit:'mm',maxScale:50}},opts:["Monday","Tuesday","Wednesday","Thursday"],ans:1,hint:"Total=100. Remove 20→ but 20 not shown. Remove 25 (Tue)→75≠80. Remove Wed=40? 60≠80. Remove 10+10=Mon+Fri? Remove Tue=25? 100−25=75. None exactly. Remove Mon(10)=90. Hmm: 100−20=80, no 20. Actually Tue is closest.",
- teach:{graphic:'bar_read',steps:["Total = 100 mm","Need 80 mm → remove 20 mm","No single day = 20. Closest: Tue(25) → 75, Thu(15) → 85","This is a trick question — <strong>Tuesday (25)</strong> is closest to giving 80!"],formula:"100 − 25 = 75 (closest to 80)"}},
+{z:2,q:"Which single day of the week would need to be removed to make total rainfall exactly 85 mm?",viz:{t:'bar',d:{items:[{label:'Mon',v:10,color:'#5c9ee8'},{label:'Tue',v:25,color:'#5c9ee8'},{label:'Wed',v:40,color:'#5c9ee8'},{label:'Thu',v:15,color:'#5c9ee8'},{label:'Fri',v:10,color:'#5c9ee8'}],isH:false,unit:'mm',maxScale:50}},opts:["Monday","Tuesday","Wednesday","Thursday"],ans:3,hint:"Total=100. Remove 15 to leave 85.",
+ teach:{graphic:'bar_read',steps:["Total = <strong>100 mm</strong>","To leave 85 mm, remove 100−85=<strong>15 mm</strong>","Thursday is <strong>15 mm</strong>"],formula:"100 − 15 = 85"}},
 {z:2,q:"Apples sold at $8/kg, oranges at $6/kg. Total revenue from apples AND oranges?",viz:{t:'bar',d:{items:[{label:'Apples',v:45,color:'#e05555'},{label:'Oranges',v:28,color:'#ff8c00'},{label:'Bananas',v:36,color:'#ffd700'}],isH:true,unit:'kg',maxScale:60}},opts:["$360","$444","$528","$888"],ans:2,hint:"45×$8=360. 28×$6=168. 360+168=?",
  teach:{graphic:'bar_read',steps:["Apples: 45×$8 = <strong>$360</strong>","Oranges: 28×$6 = <strong>$168</strong>","Total: 360+168 = <strong>$528</strong>"],formula:"$360 + $168 = $528"}},
 {z:2,q:"How many more books would P4B need to equal P4C?",viz:{t:'bar',d:{items:[{label:'P4A',v:320,color:'#5c9ee8'},{label:'P4B',v:280,color:'#4caf7d'},{label:'P4C',v:350,color:'#e05555'}],isH:false,unit:'Books',maxScale:400}},opts:["30","40","70","350"],ans:2,hint:"350−280=?",
  teach:{graphic:'bar_read',steps:["P4C = <strong>350</strong>","P4B = <strong>280</strong>","Need: 350−280 = <strong>70 more books</strong>"],formula:"350 − 280 = 70"}},
-{z:2,q:"P4C has 3 absent today. Effective class size vs P4A combined total?",viz:{t:'bar',d:{items:[{label:'P4A',v:32,color:'#5c9ee8'},{label:'P4B',v:28,color:'#4caf7d'},{label:'P4C',v:35,color:'#e05555'}],isH:false,unit:'Students',maxScale:40}},opts:["32+35=67","32+(35−3)=64","32+35−3=64","Both B and C"],ans:3,hint:"P4C effective=35−3=32. P4A+P4C(eff)=64.",
- teach:{graphic:'bar_read',steps:["P4C effective: 35−3 = <strong>32</strong>","P4A + P4C(eff): 32+32 = <strong>64</strong>","Options B and C are the same calculation"],formula:"32 + (35−3) = 64"}},
-{z:2,q:"By how many mm does April rainfall exceed the average of Jan, Feb, Mar?",viz:{t:'bar',d:{items:[{label:'Jan',v:25,color:'#5c9ee8'},{label:'Feb',v:40,color:'#5c9ee8'},{label:'Mar',v:25,color:'#5c9ee8'},{label:'Apr',v:60,color:'#5c9ee8'}],isH:false,unit:'mm',maxScale:80}},opts:["20 mm","27 mm","30 mm","60 mm"],ans:1,hint:"Avg(Jan-Mar)=(25+40+25)÷3=30+3≈30. Apr=60. 60−30=30? Check: 90÷3=30. 60−30=30.",
+{z:2,q:"P4C has 3 absent today. Effective class size vs P4A combined total?",viz:{t:'bar',d:{items:[{label:'P4A',v:32,color:'#5c9ee8'},{label:'P4B',v:28,color:'#4caf7d'},{label:'P4C',v:35,color:'#e05555'}],isH:false,unit:'Students',maxScale:40}},opts:["32+35=67","32+(35−3)=64","28+(35−3)=60","35−3=32"],ans:1,hint:"P4C effective=35−3=32. P4A+P4C(eff)=64.",
+ teach:{graphic:'bar_read',steps:["P4C effective: 35−3 = <strong>32</strong>","P4A + P4C(eff): 32+32 = <strong>64</strong>"],formula:"32 + (35−3) = 64"}},
+{z:2,q:"By how many mm does April rainfall exceed the average of Jan, Feb, Mar?",viz:{t:'bar',d:{items:[{label:'Jan',v:25,color:'#5c9ee8'},{label:'Feb',v:40,color:'#5c9ee8'},{label:'Mar',v:25,color:'#5c9ee8'},{label:'Apr',v:60,color:'#5c9ee8'}],isH:false,unit:'mm',maxScale:80}},opts:["20 mm","27 mm","30 mm","60 mm"],ans:2,hint:"Avg(Jan-Mar)=(25+40+25)÷3=30. Apr=60. 60−30=?",
  teach:{graphic:'bar_read',steps:["Avg of Jan+Feb+Mar: (25+40+25)÷3 = 90÷3 = <strong>30 mm</strong>","Apr = <strong>60 mm</strong>","Exceed: 60−30 = <strong>30 mm</strong>"],formula:"60 − 30 = 30 mm above average"}},
 {z:2,q:"Sugar costs $4/g and salt $2/g. How much more does the sugar cost than the salt?",viz:{t:'bar',d:{items:[{label:'Salt',v:15,color:'#aaa'},{label:'Sugar',v:60,color:'#ffd700'},{label:'Flour',v:200,color:'#c8a060'}],isH:true,unit:'grams',maxScale:250}},opts:["$90","$150","$210","$270"],ans:2,hint:"Sugar cost=60×$4=$240. Salt=15×$2=$30. $240−$30=?",
  teach:{graphic:'bar_read',steps:["Sugar: 60×$4 = <strong>$240</strong>","Salt: 15×$2 = <strong>$30</strong>","Diff: 240−30 = <strong>$210</strong>"],formula:"$240 − $30 = $210 more"}},
@@ -569,7 +572,7 @@ const LEVELS_A=[
  teach:{graphic:'pictograph',steps:["Sun = 3×20 = <strong>60 pastries</strong>","Revenue: 60×$8 = <strong>$480</strong>"],formula:"60 × $8 = $480"}},
 {z:3,q:"June total=870 degree-days, Dec=540. Average monthly temp for June if 30 days?",viz:{t:'table',d:{title:"Monthly Temp",table:[["Month","Avg °C","Days","Total"],["June","29","30","870"],["December","18","30","540"]]}},opts:["18°C","28°C","29°C","30°C"],ans:2,hint:"870 ÷ 30 = ?",
  teach:{graphic:'bar_read',steps:["Total ÷ days = average","870 ÷ 30 = <strong>29°C</strong>"],formula:"870 ÷ 30 = 29°C avg"}},
-{z:3,q:"Star Ferry: Sat AM had 8 trips, Sat PM had 12. At 300 passengers/trip, if each ticket costs $4.5, total Sat revenue?",viz:{t:'picto',d:{items:[{label:'Sat AM',v:8},{label:'Sat PM',v:12},{label:'Sun AM',v:6}],iconVal:2,icon:'⛵',unit:'trips'}},opts:["$6 000","$27 000","$27 000 (6000 passengers)","Both B and C"],ans:3,hint:"20 trips×300=6 000 passengers. 6 000×$4.5=$27 000.",
+{z:3,q:"Star Ferry: Sat AM had 8 trips, Sat PM had 12. At 300 passengers/trip, if each ticket costs $4.5, total Sat revenue?",viz:{t:'picto',d:{items:[{label:'Sat AM',v:8},{label:'Sat PM',v:12},{label:'Sun AM',v:6}],iconVal:2,icon:'⛵',unit:'trips'}},opts:["$6 000","$27 000","$2 700","$30 000"],ans:1,hint:"20 trips×300=6 000 passengers. 6 000×$4.5=$27 000.",
  teach:{graphic:'pictograph',steps:["Trips: 8+12=<strong>20</strong>","Passengers: 20×300=<strong>6 000</strong>","Revenue: 6 000×$4.5=<strong>$27 000</strong>"],formula:"6 000 × $4.5 = $27 000"}},
 {z:3,q:"After spending $12 on MTR each, who has the MOST remaining and what is the ratio of most to least?",viz:{t:'table',d:{title:"Octopus Balances",table:[["Student","Balance"],["Mary","$35"],["Peter","$28"],["Lily","$41"]]}},opts:["Lily $29, ratio 29:16","Mary $23, ratio 23:16","Lily $29, ratio 29:23","Peter $16, ratio 29:16"],ans:0,hint:"Lily=$41−$12=$29 (most). Peter=$16 (least). 29:16.",
  teach:{graphic:'bar_read',steps:["Lily: $41−$12 = <strong>$29</strong> (most)","Peter: $28−$12 = <strong>$16</strong> (least)","Ratio: <strong>29:16</strong>"],formula:"most:least = $29:$16"}},
@@ -577,14 +580,14 @@ const LEVELS_A=[
  teach:{graphic:'bar_read',steps:["Sat: 240×$38 = <strong>$9 120</strong>","Sun: 180×$42 = <strong>$7 560</strong>","Saturday had <strong>higher</strong> revenue"],formula:"$9 120 > $7 560 → Saturday"}},
 {z:3,q:"Temps: Mon 28, Tue 31, Wed 29, Thu 33, Fri 29. What is the MODE?",viz:null,opts:["28°C","29°C","31°C","33°C"],ans:1,hint:"Mode = value appearing MOST often",
  teach:{graphic:'bar_read',steps:["List: 28, 31, <strong>29</strong>, 33, <strong>29</strong>","29 appears twice — all others once","Mode = <strong>29°C</strong>"],formula:"mode = most frequent = 29°C"}},
-{z:3,q:"Canteen: 450 students. 1/3 chose rice, 2/5 chose noodles. How many chose NEITHER?",viz:null,opts:["100","105","225","345"],ans:1,hint:"Rice=150, Noodles=180. Both=330. 450−330=?",
- teach:{graphic:'fraction_circle',steps:["Rice: 450÷3 = <strong>150</strong>","Noodles: 450×2÷5 = <strong>180</strong>","Neither: 450−150−180 = <strong>120</strong>... check: 150+180=330, 450−330=120"],formula:"450 − 150 − 180 = 120"}},
+{z:3,q:"Canteen: 450 students. 1/3 chose rice, 2/5 chose noodles. How many chose NEITHER?",viz:null,opts:["100","120","225","345"],ans:1,hint:"Rice=150, Noodles=180. Both=330. 450−330=?",
+ teach:{graphic:'fraction_circle',steps:["Rice: 450÷3 = <strong>150</strong>","Noodles: 450×2÷5 = <strong>180</strong>","Neither: 450−150−180 = <strong>120</strong>"],formula:"450 − 150 − 180 = 120"}},
 {z:3,q:"3-day typhoon: 45 flights cancelled Day 1, 72 Day 2, 38 Day 3. Which day had the median cancellations?",viz:null,opts:["Day 1 (45)","Day 2 (72)","Day 3 (38)","Day 2 (median=72)"],ans:0,hint:"Order: 38, 45, 72. Middle = 45.",
  teach:{graphic:'bar_read',steps:["Order: 38 < 45 < 72","Middle value = <strong>45</strong>","Day 1 had the <strong>median</strong>"],formula:"median of 38,45,72 = 45 (Day 1)"}},
-{z:3,q:"Dai pai dong: $1 200/day weekdays (5 days), $2 800/day weekends (2 days). How much MORE per week than a shop earning $800 flat/day?",viz:null,opts:["$4 000","$4 200","$4 400","$9 600"],ans:2,hint:"Dai pai dong: 5×1200+2×2800=6000+5600=11 600. Other: 7×800=5 600. Diff?",
- teach:{graphic:'bar_read',steps:["Dai pai dong: 5×1200+2×2800 = 6000+5600 = <strong>$11 600</strong>","Flat shop: 7×$800 = <strong>$5 600</strong>","More: 11 600−5 600+800... 11600−5600=<strong>$6 000</strong>"],formula:"$11 600 − $5 600 = $6 000 more/week"}},
+{z:3,q:"Dai pai dong: $1 200/day weekdays (5 days), $2 800/day weekends (2 days). How much MORE per week than a shop earning $800 flat/day?",viz:null,opts:["$4 000","$4 200","$6 000","$9 600"],ans:2,hint:"Dai pai dong: 5×1200+2×2800=6000+5600=11 600. Other: 7×800=5 600. Diff?",
+ teach:{graphic:'bar_read',steps:["Dai pai dong: 5×1200+2×2800 = 6000+5600 = <strong>$11 600</strong>","Flat shop: 7×$800 = <strong>$5 600</strong>","More: 11 600−5 600 = <strong>$6 000</strong>"],formula:"$11 600 − $5 600 = $6 000 more/week"}},
 /* Zone 4: Triangle World (56-71) */
-{z:4,q:"An equilateral triangle and a square share one side of 8 cm. What is the combined perimeter of both shapes?",viz:{t:'triangle',d:{type:'equilateral'}},opts:["32 cm","40 cm","44 cm","56 cm"],ans:1,hint:"Triangle: 2 outer sides. Square: 3 outer sides. Total outer = (2+3)×8=5×8=40 cm",
+{z:4,q:"An equilateral triangle and a square share one side of 8 cm. What is the combined outer perimeter?",viz:{t:'triangle',d:{type:'equilateral'}},opts:["24 cm","32 cm","40 cm","56 cm"],ans:2,hint:"Outer edges only: triangle contributes 2 sides, square contributes 3 sides. 5×8=?",
  teach:{graphic:'triangle_angles',steps:["Triangle: 3 sides of 8 = 24 cm","Square: 4 sides of 8 = 32 cm","Shared side not in perimeter: (3+4−2)×8 = <strong>40 cm</strong>"],formula:"5 outer sides × 8 = 40 cm"}},
 {z:4,q:"An isosceles triangle has vertex angle 40°. What are the base angles?",viz:{t:'triangle',d:{type:'isosceles',angles:['40°','?','?']}},opts:["40° each","60° each","70° each","80° each"],ans:2,hint:"180−40=140. Base angles are equal: 140÷2=?",
  teach:{graphic:'triangle_angles',steps:["Total angles = <strong>180°</strong>","Known: 40°. Remaining: 180−40=<strong>140°</strong>","Two equal base angles: 140÷2 = <strong>70° each</strong>"],formula:"(180−40) ÷ 2 = 70°"}},
@@ -600,8 +603,8 @@ const LEVELS_A=[
  teach:{graphic:'triangle_angles',steps:["Original: 7+9+11 = <strong>27 cm</strong>","Double sides: 14+18+22 = <strong>54 cm</strong>","Or: 2×27 = 54 cm"],formula:"2 × 27 = 54 cm"}},
 {z:4,q:"Two angles of a triangle are 3x and 2x. The third is 60°. Find x.",viz:{t:'triangle',d:{type:'scalene',angles:['3x','2x','60°']}},opts:["12","18","24","30"],ans:2,hint:"3x+2x+60=180. 5x=120.",
  teach:{graphic:'triangle_angles',steps:["3x+2x+60 = 180","5x = 120","x = <strong>24</strong>"],formula:"5x = 120 → x = 24"}},
-{z:4,q:"Interior angles: 2a+10, a+20, and a. Find a.",viz:{t:'triangle',d:{type:'scalene',angles:['2a+10','a+20','a']}},opts:["30","37.5","38","40"],ans:1,hint:"(2a+10)+(a+20)+a=180. 4a+30=180. 4a=150. a=?",
- teach:{graphic:'triangle_angles',steps:["4a+30 = 180","4a = 150","a = 37.5 → closest whole = <strong>30</strong>... re-check: 4a=150, a=37.5"],formula:"4a+30=180 → a=37.5°"}},
+{z:4,q:"Interior angles: 2a+10, a+20, and a. Find a.",viz:{t:'triangle',d:{type:'scalene',angles:['2a+10','a+20','a']}},opts:["30","37.5","38","40"],ans:1,hint:"(2a+10)+(a+20)+a=180. 4a+30=180.",
+ teach:{graphic:'triangle_angles',steps:["4a+30 = 180","4a = 150","a = <strong>37.5</strong>"],formula:"4a+30=180 → a=37.5°"}},
 {z:4,q:"A signpost triangle has NO equal sides and its largest angle is 95°. What type and what is the sum of the other two angles?",viz:null,opts:["Isosceles, 85°","Scalene obtuse, 85°","Scalene acute, 95°","Right scalene, 85°"],ans:1,hint:"No equal sides=scalene. Largest=95°>90°=obtuse. 180−95=85°.",
  teach:{graphic:'triangle_right',steps:["No equal sides = <strong>scalene</strong>","95° > 90° = <strong>obtuse</strong>","Other two sum: 180−95 = <strong>85°</strong>"],formula:"scalene obtuse; other angles sum = 85°"}},
 {z:4,q:"Right triangle: one leg 8 cm, hypotenuse 10 cm, other leg 6 cm. What is the perimeter minus the longest side?",viz:{t:'triangle',d:{type:'right',sides:['6 cm','10 cm','8 cm']}},opts:["6 cm","8 cm","14 cm","24 cm"],ans:2,hint:"P=6+8+10=24. Longest=10. 24−10=?",
@@ -610,7 +613,7 @@ const LEVELS_A=[
  teach:{graphic:'triangle_angles',steps:["P = 2s+10 = 46","2s = 36","s = <strong>18 cm</strong>"],formula:"(46−10) ÷ 2 = 18 cm"}},
 {z:4,q:"An obtuse triangle has angles 110°, 40°, and ?. A second triangle has twice the smallest angle. What is twice the smallest?",viz:{t:'triangle',d:{type:'obtuse',angles:['110°','40°','?']}},opts:["30°","60°","80°","120°"],ans:1,hint:"Missing angle=180−110−40=30. Twice=60.",
  teach:{graphic:'triangle_angles',steps:["Missing: 180−110−40 = <strong>30°</strong>","Smallest = 30°","Twice: 30×2 = <strong>60°</strong>"],formula:"30° × 2 = 60°"}},
-{z:4,q:"Kite made of 2 triangles, each with perimeter 28 cm. The shared side is 14 cm. What is the outer perimeter of the kite?",viz:null,opts:["28 cm","42 cm","56 cm","70 cm"],ans:0,hint:"Each triangle: a+b+14=28, so a+b=14. Outer=2×(a+b)=2×14=28 cm",
+{z:4,q:"Kite made of 2 triangles, each with perimeter 28 cm. The shared side is 14 cm. What is the outer perimeter of the kite?",viz:null,opts:["28 cm","42 cm","56 cm","70 cm"],ans:0,hint:"Each triangle's two outer sides sum to 28−14=14. There are two triangles.",
  teach:{graphic:'triangle_right',steps:["Each triangle: perimeter=28, shared side=14","Other two sides of each triangle sum: 28−14=<strong>14</strong>","Kite outer perimeter: 2×14 = <strong>28 cm</strong>"],formula:"2 × (28−14) = 28 cm"}},
 {z:4,q:"Equilateral perimeter=36 cm. Each side is divided into 3 equal parts. What is the length of each small segment?",viz:{t:'triangle',d:{type:'equilateral',sides:['12 cm','12 cm','12 cm']}},opts:["3 cm","4 cm","12 cm","36 cm"],ans:1,hint:"Side=36÷3=12. 12÷3=?",
  teach:{graphic:'triangle_angles',steps:["Side: 36÷3 = <strong>12 cm</strong>","Each segment: 12÷3 = <strong>4 cm</strong>"],formula:"36÷3=12; 12÷3=4 cm"}},
@@ -631,8 +634,8 @@ const LEVELS_A=[
  teach:{graphic:'fraction_circle',steps:["Convert: 1/4 = <strong>2/8</strong>","7/8 − 2/8 = <strong>5/8</strong> remains"],formula:"7/8 − 2/8 = 5/8"}},
 {z:5,q:"Which pair are NOT equivalent? 2/3 and 8/12, OR 3/5 and 9/15, OR 4/7 and 12/20?",viz:{t:'frac',d:{type:'bar',fracs:[[2,3],[4,7]],colors:['#5c9ee8','#e8455a'],labels:['2/3','4/7']}},opts:["2/3 and 8/12","3/5 and 9/15","4/7 and 12/20","None — all equivalent"],ans:2,hint:"4/7: ×3=12/21≠12/20.",
  teach:{graphic:'fraction_compare',steps:["2/3×4=8/12 ✓","3/5×3=9/15 ✓","4/7×3=12/21 ≠ 12/20 ✗","<strong>4/7 and 12/20</strong> are NOT equivalent"],formula:"4/7 ≠ 12/20 (correct would be 12/21)"}},
-{z:5,q:"A school has 360 students. 5/9 are girls. How many more girls than boys?",viz:{t:'frac',d:{type:'circle',num:5,den:9,color:'#f5922f'}},opts:["40","80","120","200"],ans:1,hint:"Girls=200, Boys=160. 200−160=?",
- teach:{graphic:'fraction_circle',steps:["Girls: 360×5/9 = <strong>200</strong>","Boys: 360−200 = <strong>160</strong>","More girls: 200−160 = <strong>40</strong>... wait 40? Check: 360/9=40, 5×40=200, 4×40=160, diff=40"],formula:"200 − 160 = 40 more girls"}},
+{z:5,q:"A school has 360 students. 5/9 are girls. How many more girls than boys?",viz:{t:'frac',d:{type:'circle',num:5,den:9,color:'#f5922f'}},opts:["40","80","120","200"],ans:0,hint:"Girls=200, Boys=160. 200−160=?",
+ teach:{graphic:'fraction_circle',steps:["Girls: 360×5/9 = <strong>200</strong>","Boys: 360−200 = <strong>160</strong>","More girls: 200−160 = <strong>40</strong>"],formula:"200 − 160 = 40 more girls"}},
 {z:5,q:"Order: 2/3, 3/5, 5/9, 7/12 from smallest to largest.",viz:null,opts:["5/9 < 3/5 < 7/12 < 2/3","5/9 < 7/12 < 3/5 < 2/3","3/5 < 5/9 < 2/3 < 7/12","7/12 < 3/5 < 5/9 < 2/3"],ans:1,hint:"LCD=180: 2/3=120, 3/5=108, 5/9=100, 7/12=105",
  teach:{graphic:'fraction_compare',steps:["LCD=180: 5/9=100, 7/12=105, 3/5=108, 2/3=120","Order: 100<105<108<120","So: <strong>5/9 < 7/12 < 3/5 < 2/3</strong>"],formula:"100<105<108<120 → 5/9<7/12<3/5<2/3"}},
 {z:5,q:"Mei needs 2¼ cups sugar for 1 cake. She wants to make 3 cakes. How many cups does she need?",viz:null,opts:["5¼","6¾","7","7½"],ans:1,hint:"2¼×3 = 2×3+¼×3 = 6+¾ = ?",
@@ -641,7 +644,7 @@ const LEVELS_A=[
  teach:{graphic:'fraction_circle',steps:["4/12 + 5/12 = 9/12","PE: 12/12−9/12 = <strong>3/12</strong>","Simplify: ÷3 = <strong>1/4</strong>"],formula:"3/12 = 1/4"}},
 {z:5,q:"Star Ferry: 360 seats total. 5/8 economy, rest first class. First class sold 2/3 full. How many first class passengers?",viz:null,opts:["45","90","135","225"],ans:1,hint:"First=360×3/8=135. Sold=135×2/3=?",
  teach:{graphic:'fraction_circle',steps:["First class: 360×3/8 = <strong>135 seats</strong>","Sold: 135×2/3 = <strong>90 passengers</strong>"],formula:"135 × 2/3 = 90"}},
-{z:5,q:"Which is closer to 1/2: 5/11 or 4/9?",viz:null,opts:["5/11","4/9","Both equally close","Cannot tell"],ans:1,hint:"1/2−4/9=1/18. 5/11−1/2=−1/22. |1/22|<|1/18|: 5/11 closer.",
+{z:5,q:"Which is closer to 1/2: 5/11 or 4/9?",viz:null,opts:["5/11","4/9","Both equally close","Cannot tell"],ans:0,hint:"5/11 is 1/22 away. 4/9 is 1/18 away. Smaller gap is closer.",
  teach:{graphic:'fraction_compare',steps:["5/11 − 1/2 = 10/22 − 11/22 = 1/22 away","4/9 − 1/2 = 8/18 − 9/18 = 1/18 away","1/22 < 1/18, so <strong>5/11</strong> is closer to 1/2"],formula:"|5/11−1/2|=1/22 < |4/9−1/2|=1/18"}},
 {z:5,q:"Simplify: 18/24. Then find its equivalent with denominator 40.",viz:null,opts:["3/4, 30/40","3/4, 24/40","2/3, 30/40","3/4, 15/20"],ans:0,hint:"18/24=3/4. 3/4=?/40. 3×10=30.",
  teach:{graphic:'fraction_circle',steps:["18/24: GCD=6 → <strong>3/4</strong>","3/4 = ?/40: 40÷4=10, 3×10=30","Equivalent: <strong>30/40</strong>"],formula:"18/24 = 3/4 = 30/40"}},
@@ -650,7 +653,7 @@ const LEVELS_A=[
  teach:{graphic:'place_table',steps:["38572: Th=8, H=5 (ten-thousands=3)","Th digit 8: value = <strong>8 000</strong>","H digit 5: value = <strong>500</strong>","Total: 8 000+500 = <strong>8 500</strong>"],formula:"8 000 + 500 = 8 500"}},
 {z:6,q:"In 6 492, swap the thousands digit with the units digit. What is the new number?",viz:{t:'place',d:{type:'abacus',digits:[6,4,9,2],labels:['Th','H','T','O']}},opts:["2 496","2 469","2 946","6 492"],ans:0,hint:"Th=6, O=2. Swap: Th becomes 2, O becomes 6. New=2496.",
  teach:{graphic:'place_table',steps:["Original: 6 | 4 | 9 | 2","Swap Th↔O: <strong>2</strong> | 4 | 9 | <strong>6</strong>","New number: <strong>2 496</strong>"],formula:"swap Th(6) and O(2) → 2 496"}},
-{z:6,q:"5 372 rounded to nearest hundred, then add 1 000. What is the result?",viz:{t:'place',d:{type:'table',rows:[['5','3','7','2']]}},opts:["5 300","6 300","6 400","6 372"],ans:1,hint:"5372→nearest 100: T=7≥5→round up=5400. 5400+1000=?",
+{z:6,q:"5 372 rounded to nearest hundred, then add 1 000. What is the result?",viz:{t:'place',d:{type:'table',rows:[['5','3','7','2']]}},opts:["5 300","6 300","6 400","6 372"],ans:2,hint:"5372→nearest 100: T=7≥5→round up=5400. 5400+1000=?",
  teach:{graphic:'place_round',steps:["Round 5372 to nearest 100: T=7≥5 → <strong>5 400</strong>","Add 1 000: 5 400+1 000 = <strong>6 400</strong>"],formula:"5 400 + 1 000 = 6 400"}},
 {z:6,q:"Round 4 687 to nearest TEN, then nearest HUNDRED. Which gives a bigger result?",viz:null,opts:["Nearest ten (4 690)","Nearest hundred (4 700)","Equal","Cannot tell"],ans:1,hint:"Nearest 10: O=7≥5→4690. Nearest 100: T=8≥5→4700.",
  teach:{graphic:'place_round',steps:["Nearest 10: O=7≥5 → <strong>4 690</strong>","Nearest 100: T=8≥5 → <strong>4 700</strong>","4 700 > 4 690 → <strong>nearest hundred is bigger</strong>"],formula:"4 700 > 4 690"}},
@@ -675,12 +678,12 @@ const LEVELS_A=[
 {z:6,q:"At $3/ticket, how many tickets can Mei buy with $9 000? What place value does the answer sit in?",viz:null,opts:["3 000, thousands","900, hundreds","3 000, ten-thousands","30, tens"],ans:0,hint:"9000÷3=3000. 3000 has 3 in thousands place.",
  teach:{graphic:'place_table',steps:["$9 000 ÷ $3 = <strong>3 000 tickets</strong>","3 000: digit 3 is in <strong>thousands</strong> place"],formula:"9 000 ÷ 3 = 3 000"}},
 {z:6,q:"6 039 − 594 = ?",viz:{t:'place',d:{type:'table',rows:[['6','0','3','9']]}},opts:["5 335","5 435","5 445","5 545"],ans:2,hint:"6039−594: borrow as needed.",
- teach:{graphic:'place_table',steps:["6 039 − 594:","O: 9−4=5, T: 3−9 need borrow→13−9=4, H: 0−1(borrow)−5 need borrow→10−1−5=4... wait","Careful column-by-column: <strong>5 445</strong>"],formula:"6 039 − 594 = 5 445"}},
+ teach:{graphic:'place_table',steps:["6 039 − 594:","O: 9−4=5, T: borrow → 13−9=<strong>4</strong>","After borrowing, hundreds gives <strong>4</strong>; thousands gives <strong>5</strong>","Answer: <strong>5 445</strong>"],formula:"6 039 − 594 = 5 445"}},
 ];
 const LEVELS_E=[
 /* Zone 0: Measurement Lab — Expert */
-{z:0,q:"A recipe needs 1.25 kg flour. A chef has 3 bags of 350 g and one 200 g bag. Is that enough, and by how much?",viz:null,opts:["Yes, by 100 g","No, short by 50 g","Yes, by 200 g","No, short by 150 g"],ans:0,hint:"3×350+200=1250g. 1.25kg=1250g.",
- teach:{graphic:'unit_g',steps:["3×350=1050, +200=<strong>1 250 g</strong>","1.25 kg = 1 250 g","Exactly enough! No, wait — exactly equal counts as YES: <strong>Yes, by 0... re-read: +100g spare</strong>... 1250 vs 1250. Actually let's say 3×350=1050+200=1250 = 1.25kg exactly. Yes by 0g. Closest answer: Yes by 100g if 3×350+200g=1250 and need 1150g. Need = 1.25 kg = 1250g. Have = 1250g. Yes exactly. Ans=0"],formula:"3×350+200=1 250 g = 1.25 kg ✓"}},
+{z:0,q:"A recipe needs 1.25 kg flour. A chef has 3 bags of 350 g and one 200 g bag. Is that enough, and by how much?",viz:null,opts:["Yes, exactly enough","No, short by 50 g","Yes, by 200 g","No, short by 150 g"],ans:0,hint:"3×350+200=1250g. 1.25kg=1250g.",
+ teach:{graphic:'unit_g',steps:["3×350=1050, +200=<strong>1 250 g</strong>","1.25 kg = <strong>1 250 g</strong>","Have and need are equal, so it is <strong>exactly enough</strong>"],formula:"3×350+200=1 250 g = 1.25 kg"}},
 {z:0,q:"Star Ferry: 1.2 km one way, 3 round trips per day. Total km per week (7 days)?",viz:null,opts:["25.2 km","50.4 km","8.4 km","16.8 km"],ans:1,hint:"One trip=2.4km. 3×2.4=7.2/day. ×7.",
  teach:{graphic:'unit_km',steps:["Round trip: 1.2×2=<strong>2.4 km</strong>","Per day: 3×2.4=<strong>7.2 km</strong>","Per week: 7.2×7=<strong>50.4 km</strong>"],formula:"7.2 × 7 = 50.4 km/week"}},
 {z:0,q:"A 1.5 L bottle is 3/5 full. How many mL are in it? How much is empty?",viz:null,opts:["900 mL full, 600 mL empty","600 mL full, 900 mL empty","1 500 mL full, 0 mL empty","750 mL full, 750 mL empty"],ans:0,hint:"3/5 of 1500mL. Empty=1500−that.",
@@ -697,15 +700,15 @@ const LEVELS_E=[
  teach:{graphic:'unit_km',steps:["One way: 1.3+2.1+0.9 = <strong>4.3 km</strong>","Round trip: 4.3×2 = <strong>8.6 km = 8 600 m</strong>"],formula:"4.3 × 2 × 1000 = 8 600 m"}},
 {z:0,q:"A restaurant uses 375 mL soy sauce per session, 3 sessions per day. A 5 L bottle lasts how many days?",viz:null,opts:["3 days","4 days","4.4 days","5 days"],ans:1,hint:"5000÷(375×3)=?",
  teach:{graphic:'unit_ml',steps:["Per day: 375×3=<strong>1 125 mL</strong>","5 000 ÷ 1 125 = <strong>4.44</strong> → 4 full days"],formula:"5 000 ÷ 1 125 ≈ 4 days"}},
-{z:0,q:"6 steamers (350 g each) + 4 sauce jars (125 g each). What's 3× the total weight in kg?",viz:null,opts:["2.1 kg","6.3 kg","2.6 kg","7.8 kg"],ans:1,hint:"6×350+4×125=2600g. ×3÷1000.",
- teach:{graphic:'unit_g',steps:["6×350=2100, 4×125=500","Total: 2600 g","×3: 7800 g = <strong>7.8 kg</strong>... wait 2600×3=7800g=7.8kg? Q says 3× = 7800g. Hmm ans=1 is 6.3?? Let me recalc: 6×350=2100+4×125=500=2600. 3×2600=7800g=7.8kg. So ans should be 3. Let me fix: opts 2.1,6.3,2.6,7.8 → ans=3"],formula:"(2100+500)×3=7 800 g=7.8 kg"}},
+{z:0,q:"6 steamers (350 g each) + 4 sauce jars (125 g each). What's 3× the total weight in kg?",viz:null,opts:["2.1 kg","6.3 kg","2.6 kg","7.8 kg"],ans:3,hint:"6×350+4×125=2600g. ×3÷1000.",
+ teach:{graphic:'unit_g',steps:["6×350=2100, 4×125=500","Total: 2600 g","3×2600 = 7800 g = <strong>7.8 kg</strong>"],formula:"(2100+500)×3=7 800 g=7.8 kg"}},
 {z:0,q:"Platform 200 m, train 176 m. How many more m of platform remain uncovered? In cm?",viz:null,opts:["24 cm","240 cm","2 400 cm","24 m only"],ans:2,hint:"200−176=24m. ×100.",
  teach:{graphic:'unit_km',steps:["200−176=<strong>24 m</strong>","24×100=<strong>2 400 cm</strong>"],formula:"24 m × 100 = 2 400 cm"}},
 {z:0,q:"A typhoon: 240 mm rain in 6 hours. How many cm per 30 minutes?",viz:null,opts:["2 cm","4 cm","20 cm","40 cm"],ans:0,hint:"240÷6=40mm/hr. 30min=half. ÷10 for cm.",
  teach:{graphic:'unit_mm',steps:["Per hour: 240÷6=<strong>40 mm</strong>","Per 30 min: 40÷2=<strong>20 mm</strong>","In cm: 20÷10=<strong>2 cm</strong>"],formula:"20 mm = 2 cm per 30 min"}},
 {z:0,q:"3 pineapple buns ($8.50 each) + 2 egg tarts ($6.50 each). Change from $50?",viz:null,opts:["$11.50","$13.00","$24.50","$50.00"],ans:0,hint:"3×8.5+2×6.5=38.5. 50−38.5=?",
  teach:{graphic:'unit_g',steps:["3×$8.50=$25.50","2×$6.50=$13.00","Total=$38.50","Change: $50−$38.50=<strong>$11.50</strong>"],formula:"$50 − $38.50 = $11.50"}},
-{z:0,q:"Fish tank 24 L, 3/4 full. Water evaporates 500 mL/day. How many days until half full?",viz:null,opts:["6 days","12 days","18 days","24 days"],ans:2,hint:"3/4 full=18L. Half=12L. Need to lose 6L=6000mL. 6000÷500=?",
+{z:0,q:"Fish tank 24 L, 3/4 full. Water evaporates 500 mL/day. How many days until half full?",viz:null,opts:["6 days","12 days","18 days","24 days"],ans:1,hint:"3/4 full=18L. Half=12L. Need to lose 6L=6000mL. 6000÷500=?",
  teach:{graphic:'unit_ml',steps:["Start: 3/4 of 24=18 L","Half full: 12 L","Need to lose: 6 L = 6 000 mL","6 000÷500=<strong>12 days</strong>"],formula:"6 000 ÷ 500 = 12 days"}},
 {z:0,q:"Hiking 3.5 km east, 2.8 km north. Total trail in m, rounded to nearest 100 m?",viz:null,opts:["6 000 m","6 300 m","6 400 m","6 500 m"],ans:1,hint:"3500+2800=6300m.",
  teach:{graphic:'unit_km',steps:["3.5+2.8=<strong>6.3 km</strong>","= <strong>6 300 m</strong> (already exact)"],formula:"6.3 km = 6 300 m"}},
@@ -720,12 +723,12 @@ const LEVELS_E=[
  teach:{graphic:'pictograph',steps:["Mon: 3×10=30","30+40=70","Wed: 7×10=<strong>70</strong> ✓"],formula:"Mon+40=70 → Wednesday"}},
 {z:1,q:"Each 🥟=5. Week 1: 25+35+20+40+30 = ? Week 2 was 20% more. Week 2 total?",viz:null,opts:["150","180","165","200"],ans:1,hint:"Week1=150. 150×1.2=?",
  teach:{graphic:'pictograph',steps:["Week1: 25+35+20+40+30=<strong>150</strong>","20% more: 150×1.2=<strong>180</strong>"],formula:"150 × 1.2 = 180"}},
-{z:1,q:"Each ☔=2. Monthly rainy days: Apr=14,May=18,Jun=22,Jul=20. Which month had exactly half of June?",viz:null,opts:["April","May","July","None"],ans:0,hint:"Jun=22. Half=11. Apr=14? No. 22÷2=11. Apr=14. None exactly half.",
+{z:1,q:"Each ☔=2. Monthly rainy days: Apr=14,May=18,Jun=22,Jul=20. Which month had exactly half of June?",viz:null,opts:["April","May","July","None"],ans:3,hint:"Jun=22. Half=11. No month has exactly 11 rainy days.",
  teach:{graphic:'pictograph',steps:["Jun=22, half=11","Check each: Apr=14,May=18,Jul=20","None = 11 exactly → <strong>None</strong>"],formula:"22÷2=11, no month matches"}},
 {z:1,q:"Each 🧋=3. If Saturday sells 2.5× what Friday sells, and Friday has 4 icons, how many teas on Saturday?",viz:null,opts:["12","30","18","24"],ans:1,hint:"Fri=4×3=12. Sat=2.5×12=?",
  teach:{graphic:'pictograph',steps:["Fri: 4×3=<strong>12</strong>","Sat: 2.5×12=<strong>30 teas</strong>"],formula:"2.5 × 12 = 30"}},
-{z:1,q:"Each 🐠=4. A target is 200 fish/week. Actual: Mon=5,Tue=8,Wed=6,Thu=7,Fri=4 icons. Miss target by?",viz:null,opts:["By 40 fish","By 20 fish","Exactly met","Exceeded by 20"],ans:0,hint:"Total=(5+8+6+7+4)×4=?",
- teach:{graphic:'pictograph',steps:["Total icons: 5+8+6+7+4=30","30×4=<strong>120 fish</strong>","Target: 200. Miss by: 200-120=<strong>80</strong>... wait 30×4=120. 200-120=80. Let me recount: (5+8+6+7+4)=30. 30×4=120. Miss by 80. Hmm answer options dont match. Let me fix icons: Mon=8,Tue=10,Wed=9,Thu=11,Fri=12=50×4=200. So 50 icons×4=200. Met exactly. Ans=2"],formula:"50 icons × 4 = 200 = target"}},
+{z:1,q:"Each 🐠=4. A target is 200 fish/week. Actual: Mon=5,Tue=8,Wed=6,Thu=7,Fri=4 icons. Miss target by?",viz:null,opts:["By 40 fish","By 80 fish","Exactly met","Exceeded by 20"],ans:1,hint:"Total=(5+8+6+7+4)×4=?",
+ teach:{graphic:'pictograph',steps:["Total icons: 5+8+6+7+4=<strong>30</strong>","30×4=<strong>120 fish</strong>","Target: 200. Miss by 200−120=<strong>80 fish</strong>"],formula:"200 − (30×4) = 80 fish"}},
 {z:1,q:"Each 🏮=5. A shopkeeper needs 125 lanterns. Currently has icons for 80. How many MORE icons needed?",viz:null,opts:["5","9","45","125"],ans:1,hint:"Need 125, have 80. Gap=45. 45÷5=?",
  teach:{graphic:'pictograph',steps:["Gap: 125−80=<strong>45 lanterns</strong>","Icons needed: 45÷5=<strong>9 icons</strong>"],formula:"45 ÷ 5 = 9 more icons"}},
 {z:1,q:"Each 🥮=10. Sold: Mon=2,Tue=4,Wed=5,Thu=3,Fri=6. Average icons per day?",viz:null,opts:["3","4","5","6"],ans:1,hint:"(2+4+5+3+6)÷5=?",
@@ -734,10 +737,10 @@ const LEVELS_E=[
  teach:{graphic:'pictograph',steps:["Total icons: 90÷3=<strong>30 icons</strong>","Average: 30÷5=<strong>6/day</strong>"],formula:"90÷3÷5 = 6 icons/day"}},
 {z:1,q:"Each 🦐=4. A chef needs shrimp for 5 dishes. Each dish needs 24 shrimp. How many complete icons are needed?",viz:null,opts:["24","30","25","6"],ans:1,hint:"5×24=120 shrimp. 120÷4=?",
  teach:{graphic:'pictograph',steps:["5×24=<strong>120 shrimp</strong>","Icons: 120÷4=<strong>30 icons</strong>"],formula:"120 ÷ 4 = 30 icons"}},
-{z:1,q:"Each 🌸=6. A florist made 3 bouquets of 18 and 2 bouquets of 24 flowers. How many icons to represent this?",viz:null,opts:["11","13","15","17"],ans:1,hint:"3×18+2×24=54+48=102. 102÷6=?",
+{z:1,q:"Each 🌸=6. A florist made 3 bouquets of 18 and 2 bouquets of 24 flowers. How many icons to represent this?",viz:null,opts:["11","13","15","17"],ans:3,hint:"3×18+2×24=54+48=102. 102÷6=?",
  teach:{graphic:'pictograph',steps:["3×18=54, 2×24=48","Total: 102 flowers","Icons: 102÷6=<strong>17</strong>"],formula:"102 ÷ 6 = 17 icons"}},
-{z:1,q:"Each ☕=4. Mon=5,Tue=3,Wed=6. If Thu=average of Mon–Wed, how many teas on Thursday?",viz:null,opts:["4","16","14","18"],ans:1,hint:"Avg icons=(5+3+6)÷3=? Then ×4.",
- teach:{graphic:'pictograph',steps:["Avg icons: (5+3+6)÷3=<strong>4.67</strong>... round to 5? Let me fix: (5+3+6)/3=14/3≈4.67. Not clean. Fix: Mon=4,Tue=6,Wed=8 → avg=6 icons → 6×4=24 teas. opts: 16,24,32,8 ans=1"],formula:"avg(4,6,8)=6 → 6×4=24 teas"}},
+{z:1,q:"Each ☕=4. Mon=3,Tue=5,Wed=7. If Thu=average of Mon–Wed, how many teas on Thursday?",viz:null,opts:["4","16","20","28"],ans:2,hint:"Avg icons=(3+5+7)÷3=? Then ×4.",
+ teach:{graphic:'pictograph',steps:["Avg icons: (3+5+7)÷3=<strong>5</strong>","5 icons × 4 = <strong>20 teas</strong>"],formula:"avg(3,5,7)=5 → 5×4=20 teas"}},
 {z:1,q:"Each 🐟=8. A fisherman has a goal of 400 fish/week. He catches: Mon=6,Tue=8,Wed=5,Thu=9 icons. How many icons on Fri to exactly meet the goal?",viz:null,opts:["12","22","2","50"],ans:1,hint:"So far=(6+8+5+9)×8=224. Need 400. Gap=176. 176÷8=?",
  teach:{graphic:'pictograph',steps:["So far: 28 icons × 8 = <strong>224 fish</strong>","Need: 400−224=<strong>176</strong>","Fri icons: 176÷8=<strong>22</strong>"],formula:"176 ÷ 8 = 22 icons on Friday"}},
 /* Zone 2: Expert Bar Chart */
@@ -747,7 +750,7 @@ const LEVELS_E=[
  teach:{graphic:'bar_read',steps:["60×1.15=<strong>69</strong>"],formula:"60 × 1.15 = 69"}},
 {z:2,q:"Egg waffles=24, fish balls=16, tofu=12, pineapple bun=20. Which item is exactly twice another?",viz:{t:'bar',d:{items:[{label:'Egg Waffles',v:24,color:'#ffd700'},{label:'Fish Balls',v:16,color:'#ff8c00'},{label:'Tofu',v:12,color:'#4caf7d'},{label:'Pineapple Bun',v:20,color:'#a855f7'}],isH:true,unit:'Students',maxScale:30}},opts:["Egg waffles = 2× tofu","Fish balls = 2× tofu","Pineapple bun = 2× fish balls","Egg waffles = 2× fish balls"],ans:0,hint:"24 = 2 × 12",
  teach:{graphic:'bar_read',steps:["24 = 2 × 12","Egg waffles = <strong>2 × Tofu</strong>"],formula:"24 = 2 × 12"}},
-{z:2,q:"Dim sum: Mon=120,Tue=180,Wed=90,Thu=150,Fri=210 kg. If Sat=25% more than Wed, what is the Sat+Sun total if Sun=Sat−30?",viz:null,opts:["195 kg","225 kg","202.5 kg","232.5 kg"],ans:3,hint:"Sat=90×1.25=112.5. Sun=112.5−30=82.5. Total=195.",
+{z:2,q:"Dim sum: Mon=120,Tue=180,Wed=90,Thu=150,Fri=210 kg. If Sat=25% more than Wed, what is the Sat+Sun total if Sun=Sat−30?",viz:null,opts:["195 kg","225 kg","202.5 kg","232.5 kg"],ans:0,hint:"Sat=90×1.25=112.5. Sun=112.5−30=82.5. Total=195.",
  teach:{graphic:'bar_read',steps:["Sat=90×1.25=<strong>112.5 kg</strong>","Sun=112.5−30=<strong>82.5 kg</strong>","Total=112.5+82.5=<strong>195 kg</strong>"],formula:"112.5 + 82.5 = 195 kg"}},
 {z:2,q:"Bar chart range (highest−lowest): Amy=$50,Ben=$80,Chloe=$60,David=$30. If all increase by $15, new range?",viz:null,opts:["$35","$50","$65","$95"],ans:1,hint:"Range doesn't change when all increase equally",
  teach:{graphic:'bar_read',steps:["Original range: 80−30=<strong>$50</strong>","Adding $15 to ALL: range stays <strong>$50</strong>"],formula:"range unchanged when all shift equally"}},
@@ -765,8 +768,8 @@ const LEVELS_E=[
  teach:{graphic:'bar_read',steps:["Total: 25+40+25+60=<strong>150 mm</strong>","Apr %: 60/150×100=<strong>40%</strong>"],formula:"60/150 = 40%"}},
 {z:2,q:"Sugar=60g,salt=15g,flour=200g. Ratio of sugar:flour in simplest form?",viz:{t:'bar',d:{items:[{label:'Salt',v:15,color:'#aaa'},{label:'Sugar',v:60,color:'#ffd700'},{label:'Flour',v:200,color:'#c8a060'}],isH:true,unit:'grams',maxScale:250}},opts:["3:10","1:3","3:5","6:20"],ans:0,hint:"60:200=3:10",
  teach:{graphic:'bar_read',steps:["60:200","÷20: <strong>3:10</strong>"],formula:"60:200 = 3:10"}},
-{z:2,q:"Shop A sold 350, B sold 280, C sold 410. What fraction did shop B sell of the total?",viz:null,opts:["2/7","4/15","28/104","2/7.43"],ans:0,hint:"B/total=280/1040=2/7.43? Let total=280+350+410=1040. 280/1040=28/104=7/26. Hmm. Let me simplify: B=300, A=400, C=200. B/total=300/900=1/3. opts:1/4,1/3,3/10,1/2 ans=1",
- teach:{graphic:'bar_read',steps:["Total: 400+300+200=900","B: 300/900=<strong>1/3</strong>"],formula:"300/900 = 1/3"}},
+{z:2,q:"Shop A sold 350, B sold 280, C sold 410. What fraction did shop B sell of the total?",viz:null,opts:["2/7","4/15","7/26","3/10"],ans:2,hint:"B/total=280/(350+280+410)=280/1040. Simplify.",
+ teach:{graphic:'bar_read',steps:["Total: 350+280+410=<strong>1 040</strong>","B fraction: 280/1040","Simplify by 40: <strong>7/26</strong>"],formula:"280/1040 = 7/26"}},
 {z:2,q:"Noon=32°C, midnight=24°C, sunrise=19°C. Mean temperature?",viz:null,opts:["24°C","25°C","27°C","28°C"],ans:1,hint:"(32+24+19)÷3=?",
  teach:{graphic:'bar_read',steps:["32+24+19=75","75÷3=<strong>25°C</strong>"],formula:"75 ÷ 3 = 25°C mean"}},
 {z:2,q:"A bar chart shows HKD sales. Mon=1500,Tue=2100,Wed=1800. If each unit costs $6, total units sold Mon+Tue?",viz:null,opts:["300","350","600","3 600"],ans:2,hint:"(1500+2100)÷6=?",
@@ -780,8 +783,8 @@ const LEVELS_E=[
  teach:{graphic:'pictograph',steps:["Total: 40+20+60=120","Sun: 60/120=<strong>1/2</strong>"],formula:"60/120 = 1/2"}},
 {z:3,q:"June 29°C×30 days=870. Dec 18°C×30=540. March 22°C×31 days. Which month closest to 700 degree-days?",viz:{t:'table',d:{title:"Monthly Temp",table:[["Month","Avg °C","Days","Total"],["June","29","30","870"],["December","18","30","540"],["March","22","31","682"]]}},opts:["June","December","March","June & March"],ans:2,hint:"March=22×31=682. Closest to 700.",
  teach:{graphic:'bar_read',steps:["Mar: 22×31=<strong>682</strong>","682 is closest to 700"],formula:"22 × 31 = 682 ≈ 700"}},
-{z:3,q:"Ferry: 300 pass/trip. Sat AM=8,PM=12,night=5 trips. If Sun had 15% more trips than Sat total, how many Sun passengers?",viz:null,opts:["6 900","7 245","6 000","8 625"],ans:1,hint:"Sat=25 trips. Sun=25×1.15=28.75≈29. 29×300=?",
- teach:{graphic:'pictograph',steps:["Sat trips: 8+12+5=25","Sun: 25×1.15=28.75 → 29","29×300=<strong>8 700</strong>... hmm. Let me try: Sun=25×1.15=28.75. × 300=8625. So ans=3: 8625"],formula:"25×1.15×300 ≈ 8 625"}},
+{z:3,q:"Ferry: 300 pass/trip. Sat AM=8,PM=12,night=5 trips. If Sun had 15% more trips than Sat total, how many Sun passengers?",viz:null,opts:["6 900","7 245","6 000","8 625"],ans:3,hint:"Sat=25 trips. Sun=25×1.15=28.75 trips. 28.75×300=?",
+ teach:{graphic:'pictograph',steps:["Sat trips: 8+12+5=<strong>25</strong>","Sun trips: 25×1.15=<strong>28.75</strong>","Passengers: 28.75×300=<strong>8 625</strong>"],formula:"25×1.15×300 = 8 625"}},
 {z:3,q:"Octopus: Mary=$35, Peter=$28, Lily=$41. After $12 MTR, each buys $5 snack. Who drops below $12?",viz:{t:'table',d:{title:"Octopus Balances",table:[["Student","Balance"],["Mary","$35"],["Peter","$28"],["Lily","$41"]]}},opts:["Mary only","Peter only","Mary & Peter","All three"],ans:1,hint:"After MTR+snack: Mary=18, Peter=11, Lily=24.",
  teach:{graphic:'bar_read',steps:["After MTR−$12: M=$23,P=$16,L=$29","After snack−$5: M=$18,P=$11,L=$24","P=$11 < $12 → <strong>Peter only</strong>"],formula:"Peter drops to $11 < $12"}},
 {z:3,q:"Sat=240kg,Sun=180kg fish. If next week both increase by 25%, new average per day?",viz:null,opts:["210 kg","262.5 kg","525 kg","300 kg"],ans:1,hint:"Each ×1.25. New avg=(300+225)÷2=?",
@@ -792,8 +795,8 @@ const LEVELS_E=[
  teach:{graphic:'fraction_circle',steps:["Rice: 450×1/3=150","Noodles: 450×2/9=100","Soup: 450−150−100=<strong>200</strong>"],formula:"450 − 150 − 100 = 200"}},
 {z:3,q:"3-day typhoon cancels 45,72,38 flights. What is the median daily cancellation?",viz:null,opts:["38","45","72","51.7"],ans:1,hint:"Order: 38,45,72. Middle=?",
  teach:{graphic:'bar_read',steps:["Order: 38, 45, 72","Middle = <strong>45</strong>"],formula:"median of 3 = middle value = 45"}},
-{z:3,q:"Dai pai dong earns $1 200/weekday, $2 800/weekend day. Over 4 weeks, how much MORE than a $8 000/week flat shop?",viz:null,opts:["$2 400","$3 200","$4 000","$6 400"],ans:0,hint:"Dai pai dong/wk=5×1200+2×2800=11600. vs $8000. Diff/wk=3600. ×4=?",
- teach:{graphic:'bar_read',steps:["Dai dong/wk: 6000+5600=11 600","Diff/wk: 11 600−8 000=3 600","4 weeks: 3 600×4=<strong>$14 400</strong>... hmm. Let me recheck opts"],formula:"$3 600 × 4 = $14 400 more"}},
+{z:3,q:"Dai pai dong earns $1 200/weekday, $2 800/weekend day. Over 4 weeks, how much MORE than a $8 000/week flat shop?",viz:null,opts:["$2 400","$3 200","$14 400","$6 400"],ans:2,hint:"Dai pai dong/wk=5×1200+2×2800=11600. vs $8000. Diff/wk=3600. ×4=?",
+ teach:{graphic:'bar_read',steps:["Dai pai dong/wk: 6000+5600=<strong>$11 600</strong>","Diff/wk: 11 600−8 000=<strong>$3 600</strong>","4 weeks: 3 600×4=<strong>$14 400</strong>"],formula:"$3 600 × 4 = $14 400 more"}},
 /* Zone 4: Expert Triangle */
 {z:4,q:"Equilateral triangle + square share one side of 8 cm. Combined outer perimeter?",viz:{t:'triangle',d:{type:'equilateral'}},opts:["24 cm","32 cm","40 cm","56 cm"],ans:2,hint:"Triangle has 3 sides, square has 4. Shared=1 side. Outer=(3+4−2)×8",
  teach:{graphic:'triangle_angles',steps:["Triangle outer: 2 sides","Square outer: 3 sides","Total: 5×8=<strong>40 cm</strong>"],formula:"(3+4−2) × 8 = 40 cm"}},
@@ -850,9 +853,9 @@ const LEVELS_E=[
  teach:{graphic:'fraction_compare',steps:["LCD=12: 3/4=9/12, 1/3=4/12","9/12−4/12=<strong>5/12</strong>"],formula:"9/12 − 4/12 = 5/12"}},
 {z:5,q:"In HK, public holidays are about 17/365 of the year. Which is closest in value?",viz:null,opts:["1/20","1/22","1/25","1/30"],ans:0,hint:"17/365≈1/21.5. Closest?",
  teach:{graphic:'fraction_compare',steps:["17/365≈0.0466","1/20=0.05 (closest)"],formula:"17/365 ≈ 1/20"}},
-{z:5,q:"60 seats: 1/3 taken in morning, then 2/5 of remaining taken after lunch. Total taken now?",viz:null,opts:["20","28","40","44"],ans:3,hint:"Morning=20. Remaining=40. Lunch=40×2/5=16. Total=36. Hmm. 20+16=36. opts: 20,36,40,44. ans=1",
+{z:5,q:"60 seats: 1/3 taken in morning, then 2/5 of remaining taken after lunch. Total taken now?",viz:null,opts:["20","36","40","44"],ans:1,hint:"Morning=20. Remaining=40. Lunch=40×2/5=16. Total=36.",
  teach:{graphic:'fraction_circle',steps:["Morning: 60×1/3=20","Remaining: 40","Lunch: 40×2/5=16","Total: 20+16=<strong>36</strong>"],formula:"20 + 16 = 36 seats taken"}},
-{z:5,q:"Which is closest to 3/4: 5/8, 7/10, 11/15, 4/5?",viz:null,opts:["5/8","7/10","11/15","4/5"],ans:1,hint:"Convert to decimals. 3/4=0.75.",
+{z:5,q:"Which is closest to 3/4: 5/8, 7/10, 11/15, 4/5?",viz:null,opts:["5/8","7/10","11/15","4/5"],ans:2,hint:"Convert to decimals. 3/4=0.75.",
  teach:{graphic:'fraction_compare',steps:["3/4=0.75","5/8=0.625, 7/10=0.70, 11/15=0.733, 4/5=0.80","7/10=0.70: diff=0.05","4/5=0.80: diff=0.05, 11/15≈0.733: diff≈0.017","Closest: <strong>11/15</strong>"],formula:"11/15 ≈ 0.733, diff = 0.017"}},
 {z:5,q:"Simplify: 18/24",viz:null,opts:["3/4","9/12","6/8","2/3"],ans:0,hint:"GCF of 18 and 24=6",
  teach:{graphic:'fraction_circle',steps:["GCF(18,24)=6","18÷6=3, 24÷6=4","=<strong>3/4</strong>"],formula:"18/24 ÷ 6/6 = 3/4"}},
@@ -886,13 +889,15 @@ const LEVELS_E=[
 {z:6,q:"6 039 − 594 = ?",viz:{t:'place',d:{type:'table',rows:[['6','0','3','9']]}},opts:["5 335","5 445","5 555","5 645"],ans:1,hint:"Column-by-column borrowing.",
  teach:{graphic:'place_table',steps:["6039−594=<strong>5 445</strong>"],formula:"6 039 − 594 = 5 445"}},
 ];
-function getLevels(d){return d==="B"?LEVELS_B:d==="A"?LEVELS_A:LEVELS_E;}
+function getBaseLevels(d){return d==="B"?LEVELS_B:d==="A"?LEVELS_A:LEVELS_E;}
+function getLevels(d){return d==="U"?(S.ultimateLevels&&S.ultimateLevels.length?S.ultimateLevels:buildLocalUltimateLevels()):getBaseLevels(d);}
 
 /* ══ STATE ══ */
 let S={
   screen:'welcome', diff:'A', level:0, score:0,
   chosen:null, wrongCount:0, hp:100, xp:0,
   earnedBadges:[], enemyHp:100,
+  playerId:null, ultimateLevels:[],
   zoneAnswers:[], completedZoneId:0,
   dialogueText:'', dialogueFull:'',
   enemyAnim:'idle', playerAnim:'',
@@ -905,7 +910,7 @@ let S={
     var s=JSON.parse(raw);
     // Validate: must have our game signature AND sensible values
     if(s && s.game==='hkdd' && typeof s.level==='number' && s.level>=0 && s.level<=100){
-      S.diff=(s.diff==='B'||s.diff==='A'||s.diff==='E')?s.diff:'A';
+      S.diff=(s.diff==='B'||s.diff==='A'||s.diff==='E'||s.diff==='U')?s.diff:'A';
       S.level=s.level||0;
       S.score=s.score||0;
       S.earnedBadges=Array.isArray(s.badges)?s.badges:[];
@@ -921,6 +926,109 @@ function save(){
   try{localStorage.setItem(SAVE_KEY,JSON.stringify({game:'hkdd',diff:S.diff,level:S.level,score:S.score,badges:S.earnedBadges,xp:S.xp}));}catch(e){}
 }
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}; try{delete localStorage[SAVE_KEY];}catch(e){}}
+
+function getPlayerId(){
+  if(S.playerId)return S.playerId;
+  try{
+    var id=localStorage.getItem(PLAYER_KEY);
+    if(!id){
+      id='p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);
+      localStorage.setItem(PLAYER_KEY,id);
+    }
+    S.playerId=id;return id;
+  }catch(e){
+    S.playerId='p_offline';
+    return S.playerId;
+  }
+}
+function apiReady(){return location.protocol==='http:'||location.protocol==='https:';}
+function apiPost(path,payload){
+  if(!apiReady())return Promise.resolve(null);
+  return fetch(API_BASE+'/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.ok?r.json():null;})
+    .catch(function(){return null;});
+}
+function readWrongHistory(){
+  try{return JSON.parse(localStorage.getItem(WRONG_HISTORY_KEY)||'[]')||[];}catch(e){return[];}
+}
+function writeWrongHistory(items){
+  try{localStorage.setItem(WRONG_HISTORY_KEY,JSON.stringify(items.slice(-250)));}catch(e){}
+}
+function rememberAttempt(attempt){
+  var hist=readWrongHistory();
+  var key=attempt.sourceDiff+':'+attempt.sourceLevel;
+  var existing=hist.find(function(x){return x.key===key;});
+  if(!existing){
+    existing={key:key,sourceDiff:attempt.sourceDiff,sourceLevel:attempt.sourceLevel,zone:attempt.zone,wrongCount:0,totalCount:0,lastWrongAt:0};
+    hist.push(existing);
+  }
+  existing.totalCount++;
+  existing.lastAttemptAt=Date.now();
+  if(!attempt.correct){
+    existing.wrongCount++;
+    existing.lastWrongAt=Date.now();
+    existing.lastChosen=attempt.chosen;
+  }
+  writeWrongHistory(hist);
+}
+function makeAttemptPayload(lv,correct,yourAns){
+  var sourceDiff=lv.sourceDiff||S.diff;
+  var sourceLevel=Number.isInteger(lv.sourceLevel)?lv.sourceLevel:S.level;
+  return{
+    playerId:getPlayerId(),
+    diff:S.diff,
+    level:S.level,
+    sourceDiff:sourceDiff,
+    sourceLevel:sourceLevel,
+    zone:lv.z,
+    question:lv.q,
+    chosen:yourAns,
+    correctAnswer:lv.ans,
+    chosenText:lv.opts[yourAns]||'',
+    correctText:lv.opts[lv.ans]||'',
+    correct:!!correct,
+    retryCount:S.wrongCount,
+    at:new Date().toISOString()
+  };
+}
+function cloneLevelForUltimate(base,diff,idx,rank){
+  var lv=JSON.parse(JSON.stringify(base));
+  lv.sourceDiff=diff;
+  lv.sourceLevel=idx;
+  lv.ultimateRank=rank;
+  return lv;
+}
+function buildLocalUltimateLevels(){
+  var hist=readWrongHistory().filter(function(x){return x.wrongCount>0;});
+  hist.sort(function(a,b){return (b.wrongCount-a.wrongCount)||((b.lastWrongAt||0)-(a.lastWrongAt||0));});
+  var picked=[];
+  for(var i=0;i<hist.length&&picked.length<30;i++){
+    var h=hist[i],levels=getBaseLevels(h.sourceDiff),base=levels[h.sourceLevel];
+    if(base)picked.push(cloneLevelForUltimate(base,h.sourceDiff,h.sourceLevel,picked.length));
+  }
+  if(picked.length)return picked;
+  return LEVELS_E.slice(0,10).map(function(lv,i){return cloneLevelForUltimate(lv,'E',i,i);});
+}
+function loadUltimateLevels(){
+  var fallback=buildLocalUltimateLevels();
+  if(!apiReady())return Promise.resolve(fallback);
+  return apiPost('ultimate-session',{playerId:getPlayerId(),limit:30}).then(function(res){
+    if(!res||!Array.isArray(res.items)||!res.items.length)return fallback;
+    var levels=[];
+    res.items.forEach(function(item){
+      var diff=item.sourceDiff||item.diff;
+      var idx=Number(item.sourceLevel);
+      var base=getBaseLevels(diff)[idx];
+      if(base)levels.push(cloneLevelForUltimate(base,diff,idx,levels.length));
+    });
+    return levels.length?levels:fallback;
+  });
+}
+function recordAttempt(lv,correct,yourAns){
+  var payload=makeAttemptPayload(lv,correct,yourAns);
+  rememberAttempt(payload);
+  apiPost('record-attempt',payload);
+}
 
 /* ══ HELPERS ══ */
 function el(id){return document.getElementById(id);}
@@ -1494,7 +1602,7 @@ function renderWelcome(){
     box.appendChild(ce('div',{class:'save-box-title'},'📂 Saved Progress'));
     const rows=[
       ['Difficulty',DIFF_LABELS[S.diff]||S.diff],
-      ['Level',S.level+'/100'],
+      ['Level',S.level+'/'+currentLevels().length],
       ['Score',S.score+' pts'],
       ['Zone',(ZONES[currentLv().z]||ZONES[0]).emoji+' '+(ZONES[currentLv().z]||ZONES[0]).name]
     ];
@@ -1527,10 +1635,11 @@ function renderSelectDiff(){
   const card=ce('div',{class:'welcome-card'});
   card.appendChild(ce('div',{class:'welcome-logo'},'⚔️ Choose Difficulty'));
   card.appendChild(ce('div',{class:'welcome-sub'},'Pick your challenge'));
-  const grid=ce('div',{class:'diff-grid'});
+  const grid=ce('div',{class:'diff-grid',style:{gridTemplateColumns:'1fr 1fr'}});
   [{id:'B',icon:'🌱',label:'Beginner',sub:'One-step basics',color:'#3daa6e'},
    {id:'A',icon:'⚡',label:'Advanced',sub:'Multi-step HK',color:'#4a8fdf'},
-   {id:'E',icon:'🔥',label:'Expert',sub:'Complex & tricky',color:'#e8455a'}
+   {id:'E',icon:'🔥',label:'Expert',sub:'Complex & tricky',color:'#e8455a'},
+   {id:'U',icon:'🏆',label:'Ultimate',sub:'Past mistakes',color:'#c87a00'}
   ].forEach(d=>{
     const btn=ce('div',{class:'diff-btn'+(S.diff===d.id?' sel':''),
       style:{borderColor:S.diff===d.id?d.color:d.color+'44',background:S.diff===d.id?d.color+'22':'transparent'},
@@ -1546,12 +1655,27 @@ function renderSelectDiff(){
   card.appendChild(grid);
   const go=ce('button',{class:'btn',
     style:{background:'linear-gradient(135deg,'+DIFF_COLORS[S.diff]+','+DIFF_COLORS[S.diff]+'bb)',color:'#fff',marginTop:'8px',width:'100%',padding:'13px',borderRadius:'13px',border:'none',fontFamily:'Arial,sans-serif',fontSize:'15px',fontWeight:900,cursor:'pointer'},
-    onclick:()=>{S.level=0;S.score=0;S.earnedBadges=[];S.zoneAnswers=[];save();renderMap();}
+    onclick:()=>startSelectedDifficulty(go)
   },'⚔️ Start '+DIFF_LABELS[S.diff]+'!');
   card.appendChild(go);
   const back=ce('button',{class:'btn btn-ghost',onclick:()=>renderWelcome()},'← Back');
   card.appendChild(back);
   wrap.appendChild(card);root.appendChild(wrap);
+}
+
+function startSelectedDifficulty(btn){
+  function begin(){
+    S.level=0;S.score=0;S.earnedBadges=[];S.zoneAnswers=[];save();renderMap();
+  }
+  if(S.diff!=='U'){begin();return;}
+  if(btn){btn.disabled=true;btn.textContent='Loading Ultimate...';}
+  loadUltimateLevels().then(function(levels){
+    S.ultimateLevels=levels;
+    begin();
+  }).catch(function(){
+    S.ultimateLevels=buildLocalUltimateLevels();
+    begin();
+  });
 }
 
 function renderMap(){
@@ -1566,14 +1690,14 @@ function renderMap(){
   hdr.appendChild(ce('div',{class:'logo'},'HK Data Detective'));
   const hdrRight=ce('div',{style:{display:'flex',gap:'6px',alignItems:'center'}});
   hdrRight.appendChild(ce('div',{class:'diff-badge',style:{background:DIFF_COLORS[S.diff]}},DIFF_LABELS[S.diff]));
-  hdrRight.appendChild(ce('div',{class:'score-badge'},'🏅 '+S.score+'/100'));
+  hdrRight.appendChild(ce('div',{class:'score-badge'},'🏅 '+S.score+'/'+LEVELS.length));
   hdr.appendChild(hdrRight);wrap.appendChild(hdr);
 
   // Progress
   const pw=ce('div',{class:'prog-wrap'});
   const pb=ce('div',{class:'prog-bar-bg'});
   pb.appendChild(ce('div',{class:'prog-bar-fill',style:{width:pct+'%'}}));
-  pw.appendChild(pb);pw.appendChild(ce('div',{class:'prog-label'},S.level+'/100'));
+  pw.appendChild(pb);pw.appendChild(ce('div',{class:'prog-label'},S.level+'/'+LEVELS.length));
   wrap.appendChild(pw);
 
   // Map card
@@ -1766,6 +1890,7 @@ function pickAnswer(i){
   const zone=ZONES[lv.z]||ZONES[0];
   const correct=(i===lv.ans);
   S.zoneAnswers.push({lvIdx:S.level,correct,yourAns:i,lv});
+  recordAttempt(lv,correct,i);
 
   // Style chosen button
   const btn=el('move-'+i);
@@ -1964,7 +2089,7 @@ function renderEnd(){
   card.appendChild(ce('span',{class:'end-pokemon'},pct>=80?'🏆':pct>=60?'⚡':'🌱'));
   card.appendChild(ce('div',{class:'star-row'},'⭐'.repeat(stars)+'☆'.repeat(3-stars)));
   card.appendChild(ce('div',{class:'end-title'},'Case Closed! 🕵️'));
-  card.appendChild(ce('div',{class:'end-sub'},DIFF_LABELS[S.diff]+' · '+S.score+'/100 ('+pct+'%)'));
+  card.appendChild(ce('div',{class:'end-sub'},DIFF_LABELS[S.diff]+' · '+S.score+'/'+LEVELS.length+' ('+pct+'%)'));
   const bSection=ce('div',{style:{margin:'12px 0',padding:'10px',background:'#f7fafd',borderRadius:10}});
   bSection.appendChild(ce('div',{style:{fontWeight:900,fontSize:12,color:'#1a2a3a',marginBottom:'7px'}},'🏅 Pokémon Badges'));
   const bg=ce('div',{class:'badge-grid'});
